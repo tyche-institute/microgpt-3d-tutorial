@@ -1,0 +1,123 @@
+# 00 · Alusmõisted: viis ideed, mida sul päriselt vaja on
+
+🌐 [English](/00-foundations) · [Русский](/ru/00-foundations) · Eesti
+
+Kõik selles õpikus — tähelepanu, gradiendid, transformerid — on ehitatud
+viiest ideest, ja ükski neist pole raskem kui see, mida oled näinud heas
+gümnaasiumi matemaatikatunnis. See leht annab sulle igaühe neist lihtsas
+keeles, koos täpselt selle sõnavaraga, mida hilisemad õppetunnid kasutavad.
+Kui tead juba kõiki viit, hüppa otse lehele [01 · Ülevaade](/et/01-overview).
+Kui mõni hilisem õppetund tundub kunagi äkki võõrkeelele üle minevat, tule
+siia tagasi.
+
+## 1. Mudel on lihtsalt funktsioon
+
+Koolis on funktsioon midagi sellist nagu `f(x) = 3x + 2`: numbrid sisse,
+numbrid välja. Keelemudel on täpselt seesama — lihtsalt suurem. microGPT on
+funktsioon, mis võtab sisse mõned tähemärgid ja annab välja ~27 numbrit
+(üks skoor iga võimaliku järgmise tähemärgi kohta). Kogu funktsioon koosneb
+liitmistest, korrutamistest ja paarist kõverast nagu `exp(x)`. Sees pole
+mingit maagiat ega päheõpitud lausete andmebaasi — ainult aritmeetika.
+
+Konks on selles: funktsioonil on umbes **4000 keeratavat nuppu**, mida
+nimetatakse **parameetriteks** (ehk **kaaludeks**, weights). Keera nuppe ja
+sama sisend annab teistsuguse väljundi. „Treenimine" tähendab nuppude
+keeramist seni, kuni väljundid heaks lähevad. Kogu mäng ongi selles.
+
+## 2. Tähemärkidest saavad numbrid (tokenid)
+
+Funktsioonid söövad numbreid, mitte tähti. Nii et esimene samm on igav
+otsingutabel: `a → 1`, `b → 2`, … Seda nimetatakse **tokeniseerimiseks**
+(tokenization) ja iga number on **token**. Suured mudelid nagu ChatGPT
+kasutavad tokenitena sõnatükke; microGPT hoiab asja lihtsana — üks token
+tähemärgi kohta. On veel üks eriline token, mis tähendab sisendi alguses
+„teksti ALGUS" ja väljundis „STOPP".
+
+## 3. Vektorid, maatriksid ja skalaarkorrutis
+
+**Vektor** on lihtsalt numbrite loend, näiteks `[2, -1, 3]`. **Maatriks** on
+numbrite tabel. Ongi kõik — kui õppetund ütleb, et „vektoresitus (embedding)
+on 16-mõõtmeline vektor", tähendab see: „seda tähemärki esindab 16 numbrist
+koosnev loend".
+
+Üks tehe, mida pead kindlasti teadma, on **skalaarkorrutis** (dot product):
+korruta kaks vektorit positsioonhaaval läbi ja liida kõik kokku.
+
+```
+[1, 2, 3] · [4, 0, -1]  =  1·4 + 2·0 + 3·(-1)  =  1
+```
+
+Miks see oluline on? Sest skalaarkorrutis on **sarnasuse skoor**. Kui kaks
+vektorit osutavad samas suunas, on skalaarkorrutis suur ja positiivne; kui
+nad pole omavahel seotud, on see nulli lähedal; kui nad on vastassuunalised,
+on see negatiivne. Tähelepanu (õppetund 03) on ehitatud peaaegu täielikult
+sellest ühest trikist: „kui sarnane on see, mida ma otsin, sellega, mida iga
+eelnev tähemärk pakub?"
+
+**Maatrikskorrutamine** pole midagi hirmsamat kui hulk skalaarkorrutisi
+korraga — ühe tabeli iga rida korrutatakse skalaarselt teise tabeli iga
+veeruga.
+
+## 4. Tuletis on tundlikkuse nupp
+
+Võib-olla tead tuletist kui „kõvera tõusu". Siin on selle õpiku jaoks
+kasulikum lugemisviis: tuletis vastab küsimusele
+
+> *Kui ma nügin seda sisendit tibatillukese sammu võrra ülespoole, kui palju
+> ja kummas suunas väljund liigub?*
+
+Kui `f(x) = x²` ja `x = 3`, on tuletis 6: nügi `x`-i karvavõrra ülespoole ja
+`f` tõuseb umbes 6 karvavõrra. Kui funktsioonil on palju sisendeid,
+nimetatakse seda numbrit **gradiendiks** — iga nupu kohta saad ühe
+tundlikkusnumbri.
+
+Miks see loeb: treenimine peab iga 4000 nupu kohta teadma: *„kui ma keeran
+seda nuppu ülespoole, kas mudeli viga läheb paremaks või halvemaks, ja kui
+palju?"* Gradient ongi täpselt see vastuste loend. Edasine retsept on
+peaaegu naeruväärselt lihtne: **nügi iga nuppu tibatillukese sammu võrra
+selles suunas, mis viga vähendab, ja korda tuhandeid kordi.** See on
+gradientlaskumine (gradient descent) — see ongi see „õppimine"
+masinõppes.
+
+**Ahelreegel** (chain rule) on viis, kuidas gradiendid liiguvad läbi
+tehete ahela: tundlikkused korrutuvad, nagu hammasrataste ülekandearvud.
+Kui `a` kahekordistamine neljakordistab `b` ja `b` kahekordistamine
+kolmekordistab `c`, siis `a` nügimine liigutab `c`-d teguriga 4 × 3.
+Õppetund 02 näitab seda sõna otseses mõttes — impulssidena, mis voolavad
+läbi graafi tagurpidi — ja kui sa seda korra näinud oled, lakkab iga
+süvaõpperaamistiku salapärane `.backward()`-kutse salapärane olemast.
+
+## 5. Skooridest saavad tõenäosused (softmax)
+
+Mudeli toored väljundid on 27 suvalist skoori, mida nimetatakse
+**logititeks** (logits) — näiteks `[2.3, -1.1, 0.4, …]`. Meie tahame
+tõenäosusi: 27 positiivset numbrit, mille summa on 1. Muundurit nimetatakse
+**softmax'iks**:
+
+1. Võta igast skoorist `exp()` — nüüd on kõik positiivne ja suuremad skoorid
+   muutusid *palju* suuremaks.
+2. Jaga igaüks kogusummaga — nüüd on nende summa 1.
+
+Ongi kogu funktsioon. Suurest skoorist saab suur tõenäosus, väikesest
+väike, ja mitte miski pole kunagi täpselt null — igale tähemärgile jääb
+vähemalt kübeke võimalust. Kui õppetund 05 mängib **temperatuuri**
+liuguriga, jagab see lihtsalt skoorid enne softmax'i konstandiga: kõrge
+temperatuur silub erinevused (juhuslikum, loovam), madal temperatuur
+teravdab neid (enesekindlam, korduvam).
+
+## Kuidas õppetunnid neid ideid kasutavad
+
+| Õppetund | Millest see räägib | Millistele ideedele toetub |
+| -------- | ------------------ | -------------------------- |
+| [01 · Ülevaade](/et/01-overview) | Kogu tsükkel 30 sekundiga | funktsioonid (1), tokenid (2), softmax (5) |
+| [02 · Autograd](/et/02-autograd) | Kuidas `.backward()` arvutab iga gradiendi | tuletised ja ahelreegel (4) |
+| [03 · Tähelepanu](/et/03-attention) | Kuidas tähemärk „vaatab" varasemaid tähemärke | skalaarkorrutis (3), softmax (5) |
+| [04 · Transformeri plokk](/et/04-transformer-block) | Täielik edasisuund, otsast lõpuni kokku ühendatud | kõik viis |
+| [05 · Treenimine ja genereerimine](/et/05-training) | Vaatame, kuidas nupud päriselt keerlevad | gradiendid (4), softmax ja temperatuur (5) |
+
+Jäid hiljem mõne sõna taha kinni? Vaata [Sõnastikku](/et/glossary) — iga
+termin, mida õppetunnid kasutavad, ühe halastamatu lausega.
+
+Üks julgustus veel lõpetuseks: microGPT on ~150 rida tavalist Pythonit.
+Mitte 150 000 — 150. Õppetunni 05 lõpuks oled näinud *igaüht neist* 3D-s
+oma tööd tegemas. Pärast seda ei jää GPT-st järele ühtegi musta kasti.

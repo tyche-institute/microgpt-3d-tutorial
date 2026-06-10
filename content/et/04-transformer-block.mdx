@@ -1,0 +1,192 @@
+# 04 · Transformeri plokk: üks läbikäik token_id-st logititeni
+
+🌐 [English](/04-transformer-block) · [Русский](/ru/04-transformer-block) · Eesti
+
+See on õppetund, kus masin lakkab olemast skeem ja muutub konkreetseks,
+lõplikuks objektiks. Üks number läheb sisse (tokeni id), juhtub
+kolmkümmend-ja-natuke tehet — igaüks neist allpool nähtav — ja 27 numbrit
+tulevad välja. GPT-4 ja microGPT erinevad siin ainult koguses: rohkem
+plokke virnas, laiemad vektorid, rohkem päid. Teekonna *kuju*, mida sa
+kohe jälgima hakkad, on täpselt seesama, mida triljonidollariline tööstus
+jooksutab miljardeid kordi sekundis.
+
+> **Enne sukeldumist.** See õppetund on konveieriliin: tokeni vektor (tema
+> *vektoresitus* ehk embedding, 16 numbrist koosnev loend —
+> [00 · Alusmõisted](/et/00-foundations) §3) siseneb, läbib kindla jaamade
+> jada ja väljub *logititena* — üks toores skoor iga võimaliku järgmise
+> tähemärgi kohta (§5). Iga jaam on midagi, millega oled juba kohtunud:
+> maatrikskorrutamised (skalaarkorrutised pakikaupa), õppetunni 03
+> tähelepanuretsept, liitmised ja kaks väikest uut tükki. **RMSNorm**
+> skaleerib vektori ümber nii, et tema numbrid püsiksid tervisliku
+> üldsuurusega — normaliseerimine, ei midagi enamat. **ReLU** on süvaõppe
+> lihtsaim kõver: negatiivsetest saab 0, positiivsed lähevad läbi. Ära
+> jaamade järjekorda pähe õpi; liivakast ongi kaart.
+
+## Teooria
+
+Õppetunnid 01–03 suumisid välja (edasisuund → kadu → valim tsüklina) ja
+sisse (autograd, tähelepanu). See õppetund ühendab kokku keskmise tüki:
+üheainsa funktsiooni `gpt()`, mis muudab **ühe** paari `(token_id, pos_id)`
+logitite vektoriks järgmise tähemärgi üle. microGPT puhul tähendab see
+täpselt **ühte** transformeri plokki (`n_layer = 1`), `n_embd = 16`,
+`n_head = 4`, `head_dim = 4`.
+
+Andmetee, selles järjekorras, nagu viitekood seda jooksutab:
+
+1. **Vektoresitus** — otsi `wte`-st tokeni rida ja `wpe`-st positsiooni
+   rida, liida elemendihaaval → 16 elemendiga vektor `x`.
+2. **RMSNorm** (esialgne) — Karpathy rakendab `rmsnorm`-i ühe korra kohe
+   siin, *enne* plokki. Seda on kerge kahe silma vahele jätta ja ploki sees
+   oleva normi kõrval näib see liigne, aga tema kommentaar on selgesõnaline:
+   *"not redundant due to backward pass via the residual connection"*
+   (mitte liigne, sest tagasilevi käib läbi jääkühenduse). See muudab seda,
+   mida jääkharu edasi kannab.
+3. **Tähelepanu alamplokk** (eel-norm + jääkühendus):
+   - salvesta `x_residual = x` (haru **①**),
+   - lase koopia läbi `rmsnorm`-i,
+   - **mitme peaga tähelepanu** — sama `q·kᵀ/√head_dim → softmax → ·v`
+     õppetunnist 03, jooksutatuna iga pea kohta ja konkateneerituna,
+   - projitseeri `attn_wo`-ga,
+   - **liida** salvestatud haru ① tagasi.
+4. **MLP alamplokk** (eel-norm + jääkühendus):
+   - salvesta `x_residual = x` (haru **②**),
+   - lase koopia läbi `rmsnorm`-i,
+   - `mlp_fc1` laiendab 16 → 64,
+   - **ReLU** (mitte GeLU — viitekood kasutab `max(0, x)`),
+   - `mlp_fc2` projitseerib 64 → 16,
+   - **liida** salvestatud haru ② tagasi.
+5. **LM Head** — `linear(x, lm_head)` projitseerib lõpliku 16-vektori üheks
+   logitiks iga sõnavaratokeni kohta. Viitekoodis **ei ole** enne `lm_head`-i
+   mingit lõpunormi.
+
+See ongi kogu plokk. Asjad, mida microGPT-l teadlikult **ei ole** ja mida
+seetõttu pole ka liivakastis: LayerNorm (ta kasutab RMSNormi), GeLU (ta
+kasutab ReLU-d), dropout ja nihkeliikmed (biases) ühelgi lineaarkihil.
+
+Märkus kahe jääkühenduse kohta: see on **eel-normiga** (pre-norm)
+transformer. Kumbki alamplokk normaliseerib `x`-i *koopia*, jooksutab oma
+alamkihi ja liidab tulemuse tagasi *normaliseerimata* `x`-ile, mille ta
+salvestas. See salvesta-ja-liida möödaviik on joonistatud kahe kaarena
+stseeni paremas servas.
+
+### Parameetrite initsialiseerimine
+
+Enne ühtegi edasisuunda peavad kaalud olemas olema. microGPT ehitab need
+ühe korra, tavaliste Gaussi juhuslike skalaaridena, mähituna `Value`-sse
+(py read 99–114):
+
+```python
+matrix = lambda nout, nin, std=0.08: [[Value(random.gauss(0, std)) for _ in range(nin)] for _ in range(nout)]
+state_dict = {'wte': matrix(vocab_size, n_embd), 'wpe': matrix(block_size, n_embd), 'lm_head': matrix(vocab_size, n_embd)}
+for i in range(n_layer):
+    state_dict[f'layer{i}.attn_wq'] = matrix(n_embd, n_embd)
+    state_dict[f'layer{i}.attn_wk'] = matrix(n_embd, n_embd)
+    state_dict[f'layer{i}.attn_wv'] = matrix(n_embd, n_embd)
+    state_dict[f'layer{i}.attn_wo'] = matrix(n_embd, n_embd)
+    state_dict[f'layer{i}.mlp_fc1'] = matrix(4 * n_embd, n_embd)
+    state_dict[f'layer{i}.mlp_fc2'] = matrix(n_embd, 4 * n_embd)
+params = [p for mat in state_dict.values() for row in mat for p in row]
+```
+
+Iga maatriks on `nout × nin` väärtust `random.gauss(0, 0.08)` — tavaline
+normaaljaotus standardhälbega `0.08`. See on **kogu** initsialiseerimine:
+ei Xavierit, ei Kaimingit, ei mingit erilist skaleerimist. Kui
+`n_embd = 16`, `block_size = 16`, `n_head = 4` ja
+`vocab_size = len(uchars) + 1`, sisaldab `state_dict` järgmist:
+
+| maatriks | kuju (nout × nin) | roll |
+|---|---|---|
+| `wte` | vocab_size × 16 | tokenite vektoresituste tabel |
+| `wpe` | 16 × 16 | positsioonide vektoresituste tabel (block_size × n_embd) |
+| `attn_wq` / `wk` / `wv` / `wo` | igaüks 16 × 16 | kihi Q/K/V projektsioonid + väljundprojektsioon |
+| `mlp_fc1` | 64 × 16 | MLP üles-projektsioon (4·n_embd × n_embd) |
+| `mlp_fc2` | 16 × 64 | MLP alla-projektsioon (n_embd × 4·n_embd) |
+| `lm_head` | vocab_size × 16 | lõplik projektsioon logititeks |
+
+`linear(x, w)` loeb iga kaalumaatriksit kujul `[nout][nin]`, nii et
+väljund `j` on `w[j]` ja sisendi skalaarkorrutis. Lõpuks lamendab `params`
+iga skalaari igast maatriksist üheks lamedaks loendiks — täpselt selleks,
+mida õppetunni **05 · Treenimine ja genereerimine** Adam-tsükkel läbi käib:
+üks `m`/`v` puhver ja üks uuendus skalaari kohta, igal sammul.
+
+## Kommenteeritud kood
+
+Plokk elab failis `src/microgpt_annotated.py`, alajaotises
+`attention-multihead` (abifunktsioonid `linear` / `softmax` / `rmsnorm` on
+alajaotises `overview-pipeline-helpers`):
+
+```python
+def gpt(token_id, pos_id, keys, values):
+    tok_emb = state_dict['wte'][token_id]          # token embedding
+    pos_emb = state_dict['wpe'][pos_id]            # position embedding
+    x = [t + p for t, p in zip(tok_emb, pos_emb)]  # joint embedding
+    x = rmsnorm(x)  # note: not redundant due to backward pass via the residual connection
+
+    for li in range(n_layer):
+        # 1) Multi-head Attention block
+        x_residual = x
+        x = rmsnorm(x)
+        q = linear(x, state_dict[f'layer{li}.attn_wq'])
+        k = linear(x, state_dict[f'layer{li}.attn_wk'])
+        v = linear(x, state_dict[f'layer{li}.attn_wv'])
+        keys[li].append(k); values[li].append(v)
+        x_attn = []
+        for h in range(n_head):
+            hs = h * head_dim
+            q_h = q[hs:hs+head_dim]
+            k_h = [ki[hs:hs+head_dim] for ki in keys[li]]
+            v_h = [vi[hs:hs+head_dim] for vi in values[li]]
+            attn_logits = [sum(q_h[j] * k_h[t][j] for j in range(head_dim)) / head_dim**0.5
+                           for t in range(len(k_h))]
+            attn_weights = softmax(attn_logits)
+            head_out = [sum(attn_weights[t] * v_h[t][j] for t in range(len(v_h)))
+                        for j in range(head_dim)]
+            x_attn.extend(head_out)
+        x = linear(x_attn, state_dict[f'layer{li}.attn_wo'])
+        x = [a + b for a, b in zip(x, x_residual)]
+        # 2) MLP block
+        x_residual = x
+        x = rmsnorm(x)
+        x = linear(x, state_dict[f'layer{li}.mlp_fc1'])
+        x = [xi.relu() for xi in x]
+        x = linear(x, state_dict[f'layer{li}.mlp_fc2'])
+        x = [a + b for a, b in zip(x, x_residual)]
+
+    logits = linear(x, state_dict['lm_head'])
+    return logits
+```
+
+TypeScripti port failis `src/inference/model.ts` arvutab sama tee. Erinevus
+on mehaaniline: Python kutsub `gpt()`-d üks kord positsiooni kohta kasvava
+KV-vahemäluga, port aga võtab kogu jada korraga ja rakendab eksplitsiitset
+`j ≤ i` põhjuslikku maski — sama matemaatika, erinev juhtimisloogika
+(sama mõte, mille õppetund 03 tähelepanu kohta esitab).
+
+## Liivakast
+
+Iga moodul teel on plokk, millel klõpsates näed tema **sisend → väljund
+kuju** ja **täpset Pythoni rida**, mida ta jooksutab. Vajuta play (või keri),
+et saata andmeimpulss mööda teed alla; kaks rohelist kaart on jääkühenduste
+möödaviigud (salvestatud kohtades ①/② ja tagasi liidetud vastavates
+**Add**-jaamades). Tähelepanujaam võtab kokku sama arvutuse, mida selgitab
+õppetund 03 — see õppetund keskendub sellele, **kus tähelepanu tervikploki
+sees asub**. See on ploki struktuuri ja täitmisjärjekorra kaart, mitte
+päris tensoriväärtuste jaamahaaval inspektor (näidatavad kujud on staatilised
+kihimõõtmed; õppetunnis 03 saad vaadata tegelikke tähelepanunumbreid).
+
+> **Proovi ise.**
+>
+> 1. Mängi impulss üks kord otsast lõpuni maha ja vasta siis vaatamata: mitu
+>    korda andmeid normaliseeritakse? Mitu korda liitub jääkühenduse kaar
+>    teele tagasi?
+> 2. Klõpsa jaamal **mlp_fc1** ja kontrolli tema kuju: 16 sisse, 64 välja.
+>    Siis **mlp_fc2**: 64 sisse, 16 välja. Plokk hingab — laiene, mõtle,
+>    siis suru kokku.
+> 3. Leia jaam, mille Pythoni rea suudaksid nüüd mälust ümber kirjutada.
+>    (Kandidaat: vektoresituste liitmine — see on täpselt ühe `zip`-i
+>    kaugusel õppetunni 00 vektorite liitmisest.)
+> 4. Hinda ülaltoodud parameetritabeli abil, kui suur osa kõigist ~4000
+>    nupust elab vektoresituste ja lm_head tabelites, võrreldes ploki enda
+>    sisemusega. Üllatunud?
+
+<TransformerBlockSandbox />

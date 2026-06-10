@@ -1,0 +1,48 @@
+# Sõnastik
+
+🌐 [English](/glossary) · [Русский](/ru/glossary) · Eesti
+
+Iga termin, mida õppetunnid kasutavad, ühe halastamatu lausega. Terminid
+viitavad tagasi õppetunnile, kus neid tegevuses näeb.
+
+## Mudel
+
+- **Parameeter / kaal (weight)** — üks mudeli ~4000 keeratavast nupust; treenimine on nende paikaseadmise protsess. *(00, 05)*
+- **Token** — numbriks teisendatud tähemärk, et matemaatika saaks seda süüa; suured mudelid kasutavad sõnatükke, microGPT üksikuid tähemärke. *(01)*
+- **Tokeniseerija (tokenizer)** — otsingutabel, mis teisendab tähemärgid tokeniteks ja tagasi. *(01)*
+- **Vektoresitus (embedding)** — 16 numbrist koosnev loend (vektor), mis esindab ühte tokenit mudeli sees. *(04)*
+- **Logitid (logits)** — mudeli 27 toorest väljundskoori, üks iga võimaliku järgmise tähemärgi kohta, enne tõenäosusteks muutmist. *(01, 04)*
+- **Softmax** — muundur toorskooridest tõenäosusteks: astenda kõik eksponentsiaalselt, siis jaga kogusummaga. *(00, 03, 05)*
+- **Jaotus (distribution)** — täielik komplekt 27 tõenäosust summaga 1; mudeli tegelik vastus on alati jaotus, mitte kunagi üksainus tähemärk. *(01)*
+- **Valimine (sampling)** — ühe tähemärgi juhuslik loosimine vastavalt jaotusele, selle asemel et alati võtta kõige tõenäolisem. *(01, 05)*
+- **Temperatuur (temperature)** — konstant, millega skoorid enne softmax'i jagatakse; kõrge = lamedam ja juhuslikum, madal = teravam ja korduvam. *(05)*
+- **START/STOP vahimärk (sentinel)** — see üks eriline token, mis sisendis tähistab „teksti algust" ja väljundina ennustatuna „teksti lõppu". *(01)*
+
+## Arhitektuur (õppetunnid 03–04)
+
+- **Tähelepanu (attention)** — samm, kus iga positsioon hindab kõigi varasemate positsioonide asjakohasust (skalaarkorrutised), muudab skoorid softmax'iga kaaludeks ja võtab kaalutud keskmise sellest, mida need positsioonid pakuvad. *(03)*
+- **Päring / võti / väärtus (query / key / value, q, k, v)** — kolm igast positsioonist tuletatud vektorit: mida ma otsin (q), mida ma reklaamin (k), mida ma valituks osutudes üle annan (v). *(03)*
+- **Põhjuslik mask (causal mask)** — reegel, et positsioon tohib vaadata ainult *varasemaid* positsioone, mitte kunagi tulevasi; jõustatakse keelatud skooride nullimisega. *(03)*
+- **Tähelepanupea (attention head)** — üks sõltumatu koopia tähelepanumehhanismist; microGPT jooksutab mitut paralleelselt, et igaüks saaks õppida oma mustri. *(03, 04)*
+- **MLP (mitmekihiline pertseptron)** — „mõtle järele" etapp pärast tähelepanu: kaks maatrikskorrutamist ReLU-ga vahel, rakendatuna igale positsioonile eraldi. *(04)*
+- **ReLU** — süvaõppe lihtsaim kõver: negatiivsetest numbritest saab 0, positiivsed lähevad muutmata läbi. *(02, 04)*
+- **RMSNorm** — ümberskaleerimise samm, mis hoiab iga vektori numbrid tervisliku üldsuurusega, et miski ei plahvataks ega haihtuks; normaliseerimine, ei midagi enamat. *(04)*
+- **Jääkühendus (residual connection)** — ploki sisendi tagasi liitmine tema väljundile, nii et iga plokk peab õppima ainult *paranduse*, mitte täieliku teisenduse. *(04)*
+- **Pöörlev vektoresitus (rotary embedding, RoPE)** — trikk, mis ütleb tähelepanule, *kus* iga token jadas asub, pöörates q-d ja k-d positsioonist sõltuvate nurkade võrra. *(04)*
+- **Transformeri plokk** — üks täielik vektoresituste ajastu arhitektuuriüksus: norm → tähelepanu → jääkühendus → norm → MLP → jääkühendus. *(04)*
+- **Ainult-dekoodriga transformer (decoder-only transformer)** — GPT-pere kuju: virn transformeri plokke põhjusliku maskiga, treenitud ennustama järgmist tokenit. *(04)*
+
+## Treeningtsükkel (õppetunnid 02 ja 05)
+
+- **Edasisuund (forward pass)** — funktsiooni jooksutamine: tokenid sisse, logitid välja. *(01, 04)*
+- **Kadu (loss)** — üks number, mis mõõdab, kui valesti mudel eksib; siin `-log p(tõde)` keskmistatuna üle positsioonide, nii et enesekindlad valed vastused valutavad kõige rohkem. *(01, 05)*
+- **Gradient** — iga parameetri kohta vastus küsimusele „kui ma nügin seda nuppu natuke ülespoole, kui palju ja kummas suunas kadu muutub?" *(00, 02)*
+- **Ahelreegel (chain rule)** — tundlikkused läbi aheldatud tehete korrutuvad, nagu hammasrataste ülekandearvud; tagasilevi selgroog. *(00, 02)*
+- **Tagasilevi / `.backward()` (backpropagation)** — iga parameetri gradiendi arvutamine ühe tagurpidi läbikäiguga üle arvutusgraafi. *(02)*
+- **Autograd** — raamatupidamismasinavärk, mis salvestab edasisuuna ajal arvutusgraafi, et `.backward()` saaks selle tagurpidi maha mängida. *(02)*
+- **DAG (suunatud atsükliline graaf)** — selle salvestatud arvutuse kuju: nooled voolavad edasi, silmuseid pole; „atsükliline" tähendab lihtsalt, et ringiratast kõndida ei saa. *(02)*
+- **Topoloogiline järjestus** — graafi sõlmede külastamine nii, et iga sõlm tuleb pärast neid sõlmi, millest ta sõltub; järjekord, mida `.backward()` käib tagurpidi läbi. *(02)*
+- **Gradientlaskumine (gradient descent)** — treenimise retsept: nügi iga nuppu väikese sammu võrra tema gradiendi vastu, korda tuhandeid kordi. *(00, 05)*
+- **Õpisamm (learning rate)** — selle nügimise suurus; liiga suur laseb üle, liiga väike roomab. *(05)*
+- **Adam** — gradientlaskumise targem versioon, mis kohandab iga nupu sammu suurust tema gradientide ajaloo põhjal. *(05)*
+- **Samm / iteratsioon (step)** — üks täistsükkel: edasisuund → kadu → tagasilevi → parameetrite uuendus. *(05)*

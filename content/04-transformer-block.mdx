@@ -1,5 +1,15 @@
 # 04 · Transformer Block: One Pass from token_id to logits
 
+🌐 English · [Русский](/ru/04-transformer-block) · [Eesti](/et/04-transformer-block)
+
+This is the lesson where the machine stops being a diagram and becomes a
+specific, finite object. One number goes in (a token id), thirty-ish
+operations happen — every one of them visible below — and 27 numbers come
+out. GPT-4 and microGPT differ here only in quantity: more blocks stacked,
+wider vectors, more heads. The *shape* of the journey you're about to trace
+is the same one a trillion-dollar industry runs billions of times per
+second.
+
 > **Before you dive in.** This lesson is an assembly line: a token's vector
 > (its *embedding*, a list of 16 numbers —
 > [00 · Foundations](/00-foundations) §3) enters, passes through a fixed
@@ -119,5 +129,20 @@ The TypeScript port in `src/inference/model.ts` computes the same path. Its diff
 ## Sandbox
 
 Each module on the path is a block you can click to see its **input → output shape** and the **exact Python line** it runs. Press play (or scrub) to send a data pulse down the path; the two green arcs are the residual bypasses (saved at ①/② and added back at the matching **Add** stages). The attention stage summarizes the same computation explained in lesson 03 — this lesson focuses on **where attention sits inside the complete block**. It is a map of the block's structure and execution order, not a per-stage inspector of real tensor values (the shapes shown are the static layer dimensions; lesson 03 is where you watch the actual attention numbers).
+
+> **Try this.**
+>
+> 1. Play the pulse once end to end, then answer without looking: how many
+>    times does the data get normalized? How many times does a residual arc
+>    rejoin the path?
+> 2. Click the **mlp_fc1** station and check its shape: 16 in, 64 out. Then
+>    **mlp_fc2**: 64 in, 16 out. The block breathes — expand, think, then
+>    compress.
+> 3. Find the station whose Python line you could now rewrite from memory.
+>    (Candidate: the embedding add — it's one `zip` away from lesson 00's
+>    vector addition.)
+> 4. Using the parameter table above, estimate what fraction of all ~4,000
+>    dials live in the embedding and lm_head tables, versus inside the
+>    block itself. Surprised?
 
 <TransformerBlockSandbox />

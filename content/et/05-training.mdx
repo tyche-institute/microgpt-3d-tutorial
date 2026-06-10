@@ -1,0 +1,166 @@
+# 05 · Treenimine ja genereerimine: tsükkel, mis microGPT kokku sulgeb
+
+🌐 [English](/05-training) · [Русский](/ru/05-training) · Eesti
+
+Neli õppetundi masinavärki, ja mitte ükski neist ei selgitanud, kust need
+4000 nupuasendit *tulid*. See õppetund teeb seda: mudel, mis alustab puhta
+Gaussi mürana, segatud loend inimeste nimedest, ja tsükkel — edasisuund,
+kadu, tagasilevi, nügimine — korratuna tuhat korda, kuni müra on end ümber
+korraldanud millekski, mis suudab pursata `karia`, `dell`, `aanna`: nimesid,
+mida ei eksisteeri, aga võiks. See on tasuvuse õppetund. Kõik jookseb.
+
+> **Enne sukeldumist.** Treenimine on lehe
+> [00 · Alusmõisted](/et/00-foundations) §4 retsept ellu viiduna: arvuta,
+> kui valesti mudel eksib (*kadu*), hangi iga nupu *gradient* õppetunni 02
+> tagasilevi kaudu ja nügi siis iga nuppu väikese sammu võrra allamäge —
+> tuhandeid kordi. **Adam** on sama retsept amortisaatoritega: ta silub iga
+> nupu hiljutisi gradiente, et üks mürarikas samm nuppu siia-sinna ei
+> rapsiks. Ja **temperatuur** on §5 trikk: jaga skoorid enne softmax'i, et
+> muuta genereerimine julgemaks või ettevaatlikumaks. Kui oled lugenud 00 ja
+> 02, pole selles õppetunnis midagi uut — siin hakkab lihtsalt kõik lõpuks
+> tööle.
+
+## Teooria
+
+Õppetunnid 01–04 ehitasid edasisuuna. See õppetund on faili ülejäänud osa:
+kuidas kaalud *õpitakse* (treenimine) ja kuidas treenitud mudel *purskab
+uusi nimesid* (genereerimine). Mõlemad on lühikesed ja mõlemad tulevad otse
+failist `src/microgpt_annotated.py`.
+
+### Andmed ja tokeniseerija
+
+Andmestik `docs` on segatud nimede loend. Sõnavara on lihtsalt sorditud
+hulk tähemärke, mis seal esinevad:
+
+```python
+uchars = sorted(set(''.join(docs)))  # the characters → token ids 0..n-1
+BOS = len(uchars)                    # one extra sentinel id, AFTER the chars
+vocab_size = len(uchars) + 1         # chars + 1 (the BOS)
+```
+
+`BOS` on üksainus eriline token. Iga treeningdokument mähitakse sellega
+**mõlemast** otsast ja iga positsiooni **siht** (target) on lihtsalt
+järgmine token:
+
+```python
+tokens = [BOS] + [uchars.index(ch) for ch in doc] + [BOS]
+# predict tokens[pos+1] from tokens[pos]
+```
+
+Alguse BOS on „START"; lõpu BOS on see, mida mudel peab õppima ennustama,
+et öelda „see nimi on läbi".
+
+### Treenimine: edasisuund → kadu → tagasilevi → Adam
+
+Iga positsiooni jaoks toodab mudel logitid, softmax muudab need
+tõenäosusteks ja kadu on negatiivne logaritm tõenäosusest, mille mudel
+omistas *tegelikule* järgmisele tokenile, keskmistatuna üle dokumendi:
+
+```python
+probs = softmax(logits)
+loss_t = -probs[target_id].log()
+loss = (1 / n) * sum(losses)     # mean cross-entropy
+loss.backward()                  # the lesson-02 autograd, run on the whole graph
+```
+
+Seejärel uuendab **Adam** (mitte tavaline SGD) iga parameetri tema
+gradiendi põhjal. Adam hoiab parameetri kohta kahte jooksvat puhvrit —
+esimest momenti `m` (silutud gradient) ja teist momenti `v` (silutud
+ruudus gradient) —, korrigeerib nende nihke ja kahandab õpisammu
+treenimise jooksul lineaarselt:
+
+```python
+learning_rate, beta1, beta2, eps_adam = 0.01, 0.85, 0.99, 1e-8
+lr_t = learning_rate * (1 - step / num_steps)     # linear LR decay
+for i, p in enumerate(params):
+    m[i] = beta1 * m[i] + (1 - beta1) * p.grad
+    v[i] = beta2 * v[i] + (1 - beta2) * p.grad ** 2
+    m_hat = m[i] / (1 - beta1 ** (step + 1))      # bias correction
+    v_hat = v[i] / (1 - beta2 ** (step + 1))
+    p.data -= lr_t * m_hat / (v_hat ** 0.5 + eps_adam)
+    p.grad = 0                                    # reset for the next step
+```
+
+### Genereerimine: purska vastu
+
+Pärast treenimist genereerib mudel üks tähemärk korraga, alustades BOS-ist
+ja söötes iga ennustuse tagasi järgmise sisendina. Karpathy Pythonis kogub
+kasvav **KV-vahemälu** (`keys`, `values`) varasemat konteksti, nii et iga
+uus token teeb tööd ainult iseenda jaoks (brauseri port arvutab seda
+teisiti — vt märkust kommenteeritud koodi all). **Temperatuur** jagab
+logitid enne softmax'i — madal temperatuur koondab jaotuse (fokuseeritud,
+korduv), kõrge lamendab selle (juhuslik, loov). Genereerimine peatub, kui
+loositakse uuesti BOS:
+
+```python
+temperature = 0.5  # in (0, 1]
+for pos_id in range(block_size):
+    logits = gpt(token_id, pos_id, keys, values)
+    probs = softmax([l / temperature for l in logits])
+    token_id = random.choices(range(vocab_size), weights=[p.data for p in probs])[0]
+    if token_id == BOS:
+        break
+    sample.append(uchars[token_id])
+```
+
+## Kommenteeritud kood
+
+Treeningtsükkel on faili `src/microgpt_annotated.py` 5. jaotis (alajaotis
+`overview-training-step`, py read 194–226); genereerimine on 6. jaotis (py
+read 234–247). Adami hüperparameetrid `learning_rate=0.01, beta1=0.85,
+beta2=0.99, eps=1e-8` ja `num_steps=1000` on väärtused, millega kaasapandud
+kaalud treeniti.
+
+Märkus selle kohta, mida see liivakast teeb ja mida **ei** tee. Need ~89 KB
+kaale treeniti **võrguühenduseta**, Pythoni faili poolt; brauser mudelit
+uuesti ei treeni.
+
+Režiim **Train** arvutab **ühe päris gradiendi ja Adam-uuenduse** ühe
+LM-head'i parameetri jaoks (ülejäänud võrk hoitakse fikseerituna): see
+tokeniseerib sinu dokumendi, jooksutab kao jaoks ehtsa edasisuuna, kutsub
+`loss.backward()` läbi õppetunni 02 `Value`-mootori, et saada tõeline
+gradient, ja arvutab täpselt ülaltoodud Adami valemi. Iga number on päris —
+aga **arvutatud uuendus ainult kuvatakse, seda ei salvestata laaditud
+mudelisse**, ja iga sisendimuutus alustab uuesti värskete Adami puhvritega
+sammult 0. See on uuenduse *arvutus*, mitte salvestatud treeningsamm, ja
+mudel, millest režiimis Generate valimeid võtad, jääb muutmata.
+
+Režiim **Generate** jooksutab päris mudelit autoregressiivselt sinu valitud
+temperatuuril. Üks täitmise detail, milles täpne olla: Pythoni viitekood
+kasutab kasvavat KV-vahemälu, samas kui brauseri TypeScripti port
+**arvutab igal genereerimissammul kogu põhjusliku eesliite uuesti**.
+Tulemuseks saadavad logitid kasutavad sama matemaatikat, aga
+täitmisstrateegia on erinev — brauser *ei* pea inkrementaalset KV-vahemälu.
+
+## Liivakast
+
+- **Generate** — vaata, kuidas mudel ehitab nime alates BOS-ist. Lohista
+  **temperature**'i ja järgmise tähemärgi tõenäosustulbad muudavad kuju
+  reaalajas (madal = fokuseeritud, kõrge = juhuslik); **resample** loosib
+  uue nime. Genereerimine peatub, kui mudel ennustab vahimärgi STOP. (Iga
+  samm arvutab kogu eesliite uuesti — samad logitid, ilma inkrementaalse
+  KV-vahemäluta.)
+- **Train** — trüki dokument ja vaata ühte päris **gradiendi + Adam-uuenduse
+  arvutust**: andmed → edasisuund → kadu → tagasilevi → Adam. Paneel näitab
+  tõelist keskmist ristentroopiat ja tõelisi `m / v / m̂ / v̂ / lr_t / Δ`
+  väärtusi ühe LM-head'i parameetri kohta, otse valemist. Uuendus on
+  **näidatud, mitte salvestatud** — muuda sisendit ja kõik arvutatakse
+  uuesti värskete Adami puhvritega sammult 0.
+
+> **Proovi ise.**
+>
+> 1. Sea režiimis **Generate** temperatuur miinimumi ja loosi viis korda.
+>    Siis lükka see maksimumi ja loosi veel viis. Sa just pühkisid mudeli
+>    ühe liuguriga seisundist „igav, aga kindel" seisundisse „loov, aga
+>    ohjeldamatu" — täpselt sama kompromiss, mida häälestab iga
+>    juturoboti toode.
+> 2. Jälgi tõenäosustulpasid temperatuuri lohistamise *ajal*. Tulpade
+>    järjestus ei muutu kunagi — ainult kontrast. Miks? (Vihje:
+>    konstandiga jagamine ei saa skooride järjekorda muuta.)
+> 3. Anna režiimis **Train** mudelile `emma` ja pane kadu kirja. Nüüd anna
+>    `xqzzv`. Kumb dokument üllatab mudelit rohkem, ja mida see ütleb
+>    nimede kohta, mille keskel ta üles kasvas?
+> 4. Vaata LM-head'i parameetri päris `Δ`-d. See on tibatilluke. Treenimine
+>    on tuhat tibatillukest nügimist — mitte üks suur ilmutus.
+
+<TrainingSandbox defaultDoc="emma" />

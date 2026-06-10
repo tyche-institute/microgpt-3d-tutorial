@@ -1,0 +1,151 @@
+# 02 · Autograd: kuidas gradiendid voolavad läbi pisikese DAG-i
+
+🌐 [English](/02-autograd) · [Русский](/ru/02-autograd) · Eesti
+
+Igal süvaõpperaamistikul maailmas — PyTorch, JAX, TensorFlow — on südames
+üks võlusõna: `loss.backward()`. Kutsu seda, ja kuidagi saab iga miljardist
+parameetrist täpselt teada, kuidas just tema veale kaasa aitas. See õppetund
+võtab sellelt võlusõnalt saladuskatte versiooniga, mis on piisavalt väike,
+et pealt vaadata: 25 rida Pythonit ja 3D-graaf, kus näed sõna otseses mõttes
+gradiente tagurpidi voolamas, nool noole ja number numbri haaval.
+
+> **Enne sukeldumist.** Kõik siinne toetub ühele ideele lehelt
+> [00 · Alusmõisted](/et/00-foundations): tuletis kui *tundlikkuse nupp*
+> (§4) — „kui ma nügin seda sisendit tibakese võrra, kui palju väljund
+> liigub?" — ja ahelreegel kui hammasrataste ülekandearvud: tundlikkused läbi
+> aheldatud tehete *korrutuvad*. Kaks uut sõna pealkirja lahtimuukimiseks:
+> **DAG** on lihtsalt arvutuse skeem (nooled osutavad edasi, silmuseid pole)
+> ja **topoloogiline järjestus** tähendab „külasta iga sõlme pärast neid
+> sõlmi, millest ta sõltub" — see järjekord, milles sa nagunii loomulikult
+> arvutaksid. Rohkem eelteooriat polegi; ülejäänu teeb liivakast nähtavaks.
+
+## Teooria
+
+Närvivõrk on funktsioon, mis koosneb paljudest väikestest tehetest: liida,
+korruta, astenda eksponentsiaalselt, ReLU. Treenimiseks vajame kao gradienti
+iga parameetri suhtes. Trikk, mis teeb selle praktiliseks, on
+**pöördrežiimis automaatne diferentseerimine** (reverse-mode automatic
+differentiation).
+
+Karpathy `Value`-klass teostab selle umbes 25 reaga. Iga `Value` salvestab:
+
+- oma skalaarse `data`,
+- loendi `_children` — sõlmed, millest ta ehitati,
+- lokaalse gradiendi `d(self) / d(child_i)` iga lapse kohta.
+
+Kui kutsud `loss.backward()`:
+
+1. Läbi graaf topoloogilises järjestuses (lapsed enne vanemaid).
+2. Initsialiseeri `loss.grad = 1`.
+3. Käi topoloogiline loend tagurpidi läbi ja jaga iga sõlme `v` puhul
+   `v.grad` ahelreegli kaudu igale lapsele: `child.grad += local_grad_i * v.grad`.
+
+Ongi kõik. Ei mingit sümbolarvutust, ei mingit staatilist graafi — graaf
+ehitatakse lennult, samal ajal kui teed edasisuunda, ja `backward()` mängib
+selle lihtsalt tagurpidi maha.
+
+Allolev 3D-liivakast laseb sul trükkida avaldise, näha elavat DAG-i, mille
+`Value`-tehted ehitavad, ja seejärel mängida maha kas edasisuunalise impulsi
+(andmed voolavad lehtedest juure poole) või tagasisuunalise impulsi
+(gradiendid voolavad juurest lehtedeni). Lohista liugurit, et muuta mõne
+lehe väärtust, ja vaata, kuidas kogu graaf ümber arvutub.
+
+### Kuidas graafi lugeda
+
+- **Paigutus.** Lehtmuutujad istuvad **vasakul**, iga tehe oma sisenditest
+  **paremal** ja juur kõige paremal. Harud, mis kokku saavad — nagu `a` ja
+  `b`, mis mõlemad voolavad `+`-i, ning seejärel `(a+b)` ja `c`, mis voolavad
+  `*`-i — on joonistatud nähtavalt kokku jooksvate harudena, et oleks näha:
+  see on DAG, mitte kett.
+- **Tagasisuund on järkjärguline.** Vajuta **Backward** ja avamine algab
+  juurest väärtusega `root.grad = 1`, voolates sealt väljapoole; iga sõlme
+  `g=…` ilmub alles siis, kui gradient on temani päriselt jõudnud. Miski ei
+  näita kõiki lõppgradiente ette ära.
+- **Ahelreegel otse nooltel.** Iga tagasisuunaline nool kannab silti
+  `sissetulev gradient × lokaalne tuletis = panus`. Vaikenäites saadab
+  `*`-sõlm `1 × c = 10` suunas `(a+b)` ja `1 × (a+b) = -1` suunas `c`;
+  `(a+b)` saadab seejärel `10 × 1 = 10` nii `a`-le kui `b`-le. See ongi
+  ahelreegel, sõna-sõnalt välja joonistatud.
+- **Tuletatud tehted.** `-` ja `/` kannavad silti **derived**: mootor ehitab
+  need primitiividest (`a - b` on `a + (b·-1)`, `a / b` on `a · b^-1`), nii
+  et üksainus sõlm, mida näed, peidab endas selle sisestruktuuri. Gradiendid
+  on siiski täpsed — nt `-`-tehte parem sisend saab lokaalse tuletise `-1`.
+- **Astendajad on konstandid.** `**` võtab vastu ainult **arvliteraalist**
+  astendaja (`a ** 3`), mis kuvatakse sildiga `const` ja millesse gradient
+  ei voola. Muutujast astendaja nagu `a ** b` lükatakse tagasi, sest selle
+  mootori `pow` diferentseerib ainult alust — selle lubamine jätaks vaikselt
+  `b.grad = 0`.
+
+## Kommenteeritud kood
+
+`Value`-klass elab failis `src/microgpt_annotated.py`, alajaotises
+`autograd-value-class`:
+
+```python
+class Value:
+    def __init__(self, data, _children=(), _local_grads=()):
+        self.data = data
+        self.grad = 0
+        self._children = _children
+        self._local_grads = _local_grads
+
+    def __add__(self, other):
+        return Value(self.data + other.data, (self, other), (1, 1))
+
+    def __mul__(self, other):
+        return Value(self.data * other.data, (self, other), (other.data, self.data))
+
+    # ... pow, exp, log, relu identical in spirit ...
+
+    def backward(self):
+        topo = []
+        visited = set()
+        def build(v):
+            if v not in visited:
+                visited.add(v)
+                for c in v._children: build(c)
+                topo.append(v)
+        build(self)
+        self.grad = 1
+        for v in reversed(topo):
+            for child, local_grad in zip(v._children, v._local_grads):
+                child.grad += local_grad * v.grad
+```
+
+TypeScripti port failis `src/inference/value.ts` peegeldab seda üks-ühele —
+samad väljanimed, sama tehete semantika —, nii et ekvivalentsustestid saavad
+mõlemat poolt sisevaadelda.
+
+## Liivakast
+
+Trüki suvaline avaldis, kasutades `+ - * / **`, `relu(x)`, `exp(x)`,
+`log(x)`, ühetähelisi muutujaid ja sulge. Vajuta eelseadistust, et saada
+lähtepunkt. Lohista liugureid, et muuta muutujate väärtusi. Vajuta nuppu
+**Play**, et vaadata impulssi üle graafi pühkimas, või keri ajajoont käsitsi;
+**Forward/Backward** vahel lülitamine alustab impulssi otsast peale.
+
+Iga sõlm on väike arvutuskiip — struktureeritud kaart näitab tema `value`-t
+ja `grad`-i (grad näitab `--`, kuni tagasisuunaline laine temani jõuab).
+Kaks lülitit: **local derivatives** lisab tuletatud tehetele nende
+primitiivse lahtikirjutuse ja **final gradients** avab kõik gradiendid
+korraga (vaikimisi väljas, et samm-sammuline tagasisuund puutumata jääks).
+Lohista, et vaadet pisut keerutada; vaade on piiratud nii, et graaf jääb
+alati loetavaks.
+
+> **Proovi ise.**
+>
+> 1. Jäta vaikimisi `(a + b) * c` ja ennusta — *enne* nupu **Backward**
+>    vajutamist — kolm gradienti ise ahelreegliga. Siis vajuta play ja
+>    kontrolli. (Spoilerivaba vihje: `c` gradient on see, millega `(a+b)`
+>    parajasti võrdub.)
+> 2. Trüki `relu(a * b)` ja lohista liugureid, kuni `a * b` läheb
+>    negatiivseks. Vaata, kuidas iga ReLU-st ülesvoolu gradient nulli
+>    klõpsab — „surnud ReLU", millega kohtud uuesti õppetunnis 04, otse
+>    sinu silme all.
+> 3. Ehita `a * a` (sama muutuja kaks korda). Pane tähele, kuidas gradient
+>    mõlemast teest *kokku liitub* — see on tagasisuunatsükli `+=` oma tööd
+>    tegemas.
+> 4. Leia avaldis, kus muutuja ülespoole nügimine viib väljundi *alla*.
+>    Mis märgiga on tema gradient?
+
+<AutogradSandbox defaultExpression="(a + b) * c" defaultVariables={{ a: 2, b: -3, c: 10 }} />

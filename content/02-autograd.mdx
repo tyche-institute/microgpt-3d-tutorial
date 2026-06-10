@@ -1,5 +1,14 @@
 # 02 · Autograd: How Gradients Flow Through a Tiny DAG
 
+🌐 English · [Русский](/ru/02-autograd) · [Eesti](/et/02-autograd)
+
+Every deep-learning framework on Earth — PyTorch, JAX, TensorFlow — has one
+spell at its core: `loss.backward()`. Call it, and somehow every one of a
+billion parameters learns exactly how it contributed to the error. This
+lesson de-mystifies that spell with a version small enough to watch: 25
+lines of Python, and a 3D graph where you can literally see the gradients
+flow backward, arrow by arrow, number by number.
+
 > **Before you dive in.** Everything here rests on one idea from
 > [00 · Foundations](/00-foundations): the derivative as a *sensitivity
 > dial* (§4) — "if I nudge this input a tiny bit, how much does the output
@@ -80,5 +89,19 @@ The TypeScript port in `src/inference/value.ts` mirrors this one-for-one — sam
 Type any expression using `+ - * / **`, `relu(x)`, `exp(x)`, `log(x)`, single-letter variables, and parentheses. Hit a preset for a starting point. Drag sliders to change variable values. Press **Play** to watch the pulse sweep the graph, or scrub the timeline by hand; switching **Forward/Backward** restarts the pulse from the start.
 
 Each node is a small computation chip — a structured card shows its `value` and `grad` (the grad reads `--` until the backward wave reaches it). Two toggles: **local derivatives** annotates the derived ops with their primitive expansion, and **final gradients** reveals every gradient at once (off by default, so the step-by-step backward stays intact). Drag to orbit a little; the view is clamped so the graph always stays readable.
+
+> **Try this.**
+>
+> 1. Keep the default `(a + b) * c` and — *before* pressing **Backward** —
+>    predict the three gradients yourself with the chain rule. Then press
+>    play and check. (Spoiler-free hint: `c`'s gradient is whatever `(a+b)`
+>    currently equals.)
+> 2. Type `relu(a * b)` and drag the sliders until `a * b` goes negative.
+>    Watch every gradient upstream of the ReLU snap to zero — the "dead
+>    ReLU" you'll meet again in lesson 04, live.
+> 3. Build `a * a` (the same variable twice). Notice the gradient *adds up*
+>    from both paths — that's the `+=` in the backward loop doing its job.
+> 4. Find an expression where nudging a variable up makes the output go
+>    *down*. What sign is its gradient?
 
 <AutogradSandbox defaultExpression="(a + b) * c" defaultVariables={{ a: 2, b: -3, c: 10 }} />

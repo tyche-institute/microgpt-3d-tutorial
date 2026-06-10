@@ -1,0 +1,148 @@
+# 03 · Tähelepanu: kuidas tokenid omavahel räägivad
+
+🌐 [English](/03-attention) · [Русский](/ru/03-attention) · Eesti
+
+Siin on probleem, mille tähelepanu (attention) lahendab. Õppetunni 01
+ülesehituse järgi peab iga positsioon ennustama oma järgmise tähemärgi —
+aga tähemärk üksinda on peaaegu kasutu kontekst. `n` sõnas `an…` peab
+teadma, et tema ees oli `a`; teine `n` sõnas `ann…` peab teadma, et ta on
+*teine* `n`. Tähelepanu on mehhanism, mis laseb igal positsioonil tahapoole
+sirutuda, küsida „kes minu eelkäijatest praegu loeb?" ja tõmmata ligi just
+selle info, mida tal vaja on — kasutades ainult skalaarkorrutisi ja ühte
+softmax'i. Seesama üks idee on GPT „T-täht" ja põhjus, miks see arhitektuur
+maailma vallutas.
+
+> **Enne sukeldumist.** Tähelepanu on ehitatud peaaegu täielikult
+> *skalaarkorrutisest*, mida tutvustab [00 · Alusmõisted](/et/00-foundations)
+> §3 — korruta kaks numbriloendit positsioonhaaval, liida kokku ja loe
+> tulemust kui **sarnasuse skoori** —, pluss *softmax* (§5), mis muudab need
+> skoorid kaaludeks summaga 1. Kui õppetund ütleb, et q, k ja v on
+> „vektoresituse õpitud lineaarteisendus", tähendab see: võta tokeni vektor
+> ja korruta see õpitud nuppude maatriksiga — sama tehe, kolm erinevat
+> nupukomplekti, kolm erinevat eesmärki. Jagaja `√d` on lihtsalt
+> helitugevusnupp, mis hoiab skoorid mugavas vahemikus.
+
+## Teooria
+
+Enesetähelepanu küsib iga päringutokeni `q_i` kohta: „kui palju peaksin
+kuulama iga varasema tokeni väärtust `v_j`?" Retsept:
+
+1. Projitseeri iga token kolmeks vektoriks: **päring** (query) `q`,
+   **võti** (key) `k`, **väärtus** (value) `v`. Igaüks neist on tokeni
+   vektoresituse õpitud lineaarteisendus.
+2. Skoori päring iga võtme vastu:
+   `score[i][j] = (q_i · k_j) / sqrt(d_head)`. `sqrt` hoiab dispersiooni
+   stabiilsena, kui pea mõõde kasvab.
+3. Rakenda **põhjuslik mask** (causal mask) — token `i` näeb ainult
+   tokeneid `j ≤ i`. Lase (maskitud) rida läbi softmax'i, et tähelepanukaalude
+   summa oleks 1.
+4. Võta väärtusvektorite kaalutud summa:
+   `output_i = Σ_j softmax(score)[i][j] * v_j`.
+
+Kogu kiht teeb seda paralleelselt **iga pea kohta** eraldi; iga pea saab oma
+viilu vektoresitusest ja õpib oma päringu/võtme/väärtuse projektsioonid.
+Peade väljundid pannakse järjest kokku (konkateneeritakse) ja projitseeritakse
+`W_o` abil tagasi vektoresituse mõõtmesse.
+
+Allolev liivakast on **tokenite suhtluslabor** ühe pea ja ühe sinu valitud
+päringutokeni jaoks. Vaata, kuidas päring saadab igale nähtavale võtmele
+**skoorikiired**, kuidas **põhjusliku maski** sein blokeerib tulevased
+tokenid, kuidas toored skoorid muutuvad **softmax-kaaludeks** (mille summa
+on 1) ja kuidas kaalutud **väärtused** voolavad mikserisse, moodustades
+`output_i`. Mõned asjad, mille pilt selgesti välja toob:
+
+- **Skoorid ja softmax on eri etapid.** `attention_logits` (toores
+  `q·k/√d`) ja `attention_softmax` (kaalud) püütakse päris mudelist eraldi
+  kinni — kiired näitavad kõigepealt skoore ja saavad siis uue sildi
+  kaaludena.
+- **Maskitud tulevikutokenid ei jõua kunagi softmax'i.** Skoori `q_i·k_j`
+  *saab* tulevase võtme `j > i` jaoks küll arvutada (ja labor näitab maski
+  seina nende positsioonide kohal puhtalt selleks, et reegel nähtav oleks),
+  aga mask rakendatakse **enne** softmax'i — mudel ei lase tulevikutokenil
+  kunagi osaleda ja kaalud normaliseeritakse ainult üle `j ≤ i`.
+- **Q/K/V ribad on sildid, mitte suurused.** Kolm värvilist riba iga tokeni
+  all lihtsalt märgivad, *milline* projektsioon on päring, võti ja väärtus —
+  nende pikkus on illustratiivne. Tegelikud numbrid elavad
+  `q·k` lahtivõtupaneelis.
+- **Väärtuskiired on kaalutud summa.** Iga nähtav väärtus voolab mikserisse
+  sildiga `wⱼ·vⱼ`; mikser liidab need kokku: `output_i = Σ wⱼ·vⱼ`.
+- **Mitu pead on päris asi, mitte dekoratsioon.** Iga rõngas alumises reas
+  näitab just selle pea *enda* softmax-jaotust samade võtmete üle — lülita
+  peade vahel (või jälgi minitulpasid) ja näed, et eri pead keskenduvad eri
+  positsioonidele.
+- **See on üks valitud pea.** `output_i` siin on selle pea väljund. Täielik
+  kiht jooksutab kõiki päid paralleelselt, **konkateneerib** seejärel nende
+  väljundid ja projitseerib need `W_o`-ga.
+
+## Kommenteeritud kood
+
+Tähelepanuplokk elab failis `src/microgpt_annotated.py`, alajaotises
+`attention-multihead`:
+
+```python
+def gpt(token_id, pos_id, keys, values):
+    # ...embedding + rmsnorm above this point...
+    for li in range(n_layer):
+        x_residual = x
+        x = rmsnorm(x)
+        q = linear(x, state_dict[f'layer{li}.attn_wq'])
+        k = linear(x, state_dict[f'layer{li}.attn_wk'])
+        v = linear(x, state_dict[f'layer{li}.attn_wv'])
+        keys[li].append(k)
+        values[li].append(v)
+        x_attn = []
+        for h in range(n_head):
+            hs = h * head_dim
+            q_h = q[hs:hs+head_dim]
+            k_h = [ki[hs:hs+head_dim] for ki in keys[li]]
+            v_h = [vi[hs:hs+head_dim] for vi in values[li]]
+            attn_logits = [sum(q_h[j] * k_h[t][j] for j in range(head_dim)) / head_dim**0.5
+                           for t in range(len(k_h))]
+            attn_weights = softmax(attn_logits)
+            head_out = [sum(attn_weights[t] * v_h[t][j] for t in range(len(v_h)))
+                        for j in range(head_dim)]
+            x_attn.extend(head_out)
+        x = linear(x_attn, state_dict[f'layer{li}.attn_wo'])
+        x = [a + b for a, b in zip(x, x_residual)]
+        # ...MLP block follows...
+```
+
+Pane tähele, et põhjuslik struktuur on sisse ehitatud juba
+väljakutsesignatuuri: `gpt()` kutsutakse üks kord iga positsiooni kohta ja
+KV-vahemälu (`keys`, `values`) kasvab iga kutsega ühe rea võrra. TypeScripti
+port failis `src/inference/model.ts` arvutab selle asemel kogu `T`-pikkuse
+jada ühe kutsega, eksplitsiitse `j ≤ i` tsükliga — sama matemaatika, erinev
+juhtimisloogika.
+
+## Liivakast
+
+Vali lause (≤6 tähemärki), **pea** (head, 0–3) ja **päringutoken** `i`.
+Vajuta nuppu **Play**, et vaadata faase — tokenid → Q/K/V → skoorid → mask →
+softmax → kaalutud väärtuste summa → mitu pead. Lülitid näitavad/peidavad
+Q/K/V vektorid, toored skoorid, softmax-kaalud, maskitud tuleviku ja mitme
+pea ülevaate. Klõpsa nuppu **inspect q·k** (või kiire silti), et näha
+skalaarkorrutise mõõtmehaaval lahtivõttu.
+
+Kaks värvi kannavad kahte etappi, ülevalt alla: **oranžid** kiired on
+tähelepanukaalud päringust iga nähtava võtmeni (ülemine rada) ja
+**rohelised** kiired on kaalutud väärtused `wⱼ·vⱼ`, mis voolavad igast
+`Vⱼ` kiibist alla väljundmikserisse (alumine rada). Tulevikutoken (`j > i`)
+on maskitud: tema kiip muutub halliks ning ta ei saa **ei** oranži serva
+**ega** rohelist kiirt.
+
+> **Proovi ise.**
+>
+> 1. Lae `anna`, päri viimase `a` kohta ja vaata oranže kaale. Millisest
+>    varasemast tähemärgist see pea kõige rohkem hoolib? Nüüd vaheta päid
+>    (0–3) — kas nad on ühel meelel? (Ei tohiks olla: iga pea õppis oma
+>    harjumuse.)
+> 2. Sea päringuks *esimene* tähemärk. Tema softmax-real on täpselt üks
+>    nähtav võti — tema ise. Mis peab tema tähelepanukaal olema, juba enne
+>    vaatamist?
+> 3. Klõpsa nuppu **inspect q·k** ja leia, millised skalaarkorrutise mõõtmed
+>    panustavad kõige rohkem. Sarnasuse skoor on mõõdete kaupa kokkulangevuste
+>    summa — siin nad on, ükshaaval.
+> 4. Jälgi maski seina. Hallid tulevikutokenid ei saa üldse oranži kiirt —
+>    veendu, et kaalude summa üle nähtava mineviku on ikkagi 1.
+
+<AttentionSandbox defaultText="anna" />

@@ -1,0 +1,122 @@
+# 01 · Ülevaade: andmed → edasisuund → kadu → valim 30 sekundiga
+
+🌐 [English](/01-overview) · [Русский](/ru/01-overview) · Eesti
+
+Selle lehe lõpuks oled näinud, kuidas 4000 nupuga masin loeb pooleldi
+kirjutatud nimesid nagu `ann…` ja paneb panuse igale võimalikule järgmisele
+tähele — seejärel õpib oma vigadest ja mõtleb lõpuks välja nimesid, mida
+pole kunagi kellelgi olnud. Kogu ülejäänud õpik lihtsalt suumib sisse
+kastidesse, millega siin kohtud.
+
+> **Enne sukeldumist.** See õppetund toetub kolmele ideele lehelt
+> [00 · Alusmõisted](/et/00-foundations): mudel on *funktsioon* keeratavate
+> nuppudega (§1), tähemärkidest saavad numbrid nimega *tokenid* (§2) ja
+> *softmax* muudab toored skoorid tõenäosusteks (§5). Üks lisand: kaofunktsioon
+> kasutab `-log p` — kõik, mida pead teadma, on see, et tegu on trahviga,
+> mis on väike, kui mudel andis õigele vastusele suure tõenäosuse, ja
+> hiiglaslik, kui mudel eksis enesekindlalt. Jäid mõne sõna taha kinni? Ava
+> [Sõnastik](/et/glossary).
+
+## Teooria
+
+Keelemudel on neli asja ühe vihmamantli all: tokeniseerija, edasisuund
+(forward pass), kaofunktsioon (loss) ja valija (sampler). Kõik muu —
+tähelepanu, MLP-d, pöörlevad vektoresitused, ekspertide segud — on lihtsalt
+uhkem edasisuund.
+
+Kogu see õppetund mahub ühte lausesse:
+
+> Mudel loeb mõned tähemärgid, ennustab jaotuse selle üle, mis peaks tulema järgmiseks, ja õpib, võrreldes oma ennustust tõega.
+
+Kolm vaadet sellele tsüklile — igaüks on režiim, mida saad allolevas
+liivakastis ise juhtida. Iga klipp näitab sama konveierit: **sisendtähemärgid
+→ MUDEL (MODEL) → tõenäosus iga võimaliku järgmise tähemärgi kohta.**
+
+**Forward** — mudel loeb tähemärgid ja ennustab tõenäosuse *iga* võimaliku
+järgmise tähemärgi kohta. Parempoolsed tulbad ongi see jaotus: mõned kõige
+tõenäolisemad, pluss neutraalne tulp `other`, mis on kõigi eraldi näitamata
+tähemärkide *summaarne* tõenäosus (summa, mitte üks kandidaat). Üks eriline
+token on vahimärk (sentinel): sisendi kõige alguses tähendab see **START**,
+ja kui mudel ennustab seda *järgmise* tähemärgina, tähendab see **STOP** —
+teksti lõpp. Iva: mudel väljastab jaotuse, mitte üheainsa vastuse.
+
+<img src="/microgpt-3d-tutorial/diagrams/overview-forward-light.gif" alt="Forward: sisendtähemärgid voolavad kasti MODEL; paremal näitavad sildistatud tulbad iga järgmise tähemärgi tõenäosust, kõrgeim esile tõstetud" loading="lazy" className="dark:hidden" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
+<img src="/microgpt-3d-tutorial/diagrams/overview-forward-dark.gif" alt="Forward: sisendtähemärgid voolavad kasti MODEL; paremal näitavad sildistatud tulbad iga järgmise tähemärgi tõenäosust, kõrgeim esile tõstetud" loading="lazy" className="hidden dark:block" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
+
+**Loss** — igal positsioonil ennustab mudel järgmise tähemärgi ja me võrdleme
+seda *tegeliku* järgmise tähemärgiga. Roheline linnuke tähendab, et mudeli
+esipakkumine oli õige, punane rist tähendab, et see oli vale — aga kadu ise
+on negatiivne logaritm tõenäosusest, mille mudel andis tõele,
+`-log p(true)`, keskmistatuna üle positsioonide. Niisiis sõltub kadu tõe
+tõenäosusest, mitte ainult sellest, kas esipakkumine läks täppi.
+
+<img src="/microgpt-3d-tutorial/diagrams/overview-loss-light.gif" alt="Loss: sisendtähemärgid joondatuna oma tegelike järgmiste tähemärkidega, iga veerg märgitud rohelise linnukese või punase ristiga, lõpus keskmine kadu" loading="lazy" className="dark:hidden" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
+<img src="/microgpt-3d-tutorial/diagrams/overview-loss-dark.gif" alt="Loss: sisendtähemärgid joondatuna oma tegelike järgmiste tähemärkidega, iga veerg märgitud rohelise linnukese või punase ristiga, lõpus keskmine kadu" loading="lazy" className="hidden dark:block" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
+
+**Sample** — viimasel positsioonil loosi üks tähemärk *juhuslikult vastavalt
+tõenäosustele* (mitte alati kõige tõenäolisem), lisa see sisendi lõppu ja
+korda, et genereerida teksti. Kui loos langeb tulpa `other`, lisatakse
+tegelik peidetud tähemärk; kui loositakse vahimärk **STOP**, genereerimine
+lõpeb.
+
+<img src="/microgpt-3d-tutorial/diagrams/overview-sample-light.gif" alt="Sample: oranž marker loosib tõenäosustulpadest ühe tokeni; tavaline tähemärk lendab sisendrea lõppu, vahimärgi STOP loosimine aga lõpetab genereerimise" loading="lazy" className="dark:hidden" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
+<img src="/microgpt-3d-tutorial/diagrams/overview-sample-dark.gif" alt="Sample: oranž marker loosib tõenäosustulpadest ühe tokeni; tavaline tähemärk lendab sisendrea lõppu, vahimärgi STOP loosimine aga lõpetab genereerimise" loading="lazy" className="hidden dark:block" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
+
+Õppetund 02 suumib sisse autogradi, mis teeb „kaost õppimise" võimalikuks.
+Õppetund 03 suumib sisse enesetähelepanu (self-attention) plokki. See
+õppetund jääb linnulennuvaate juurde.
+
+## Kommenteeritud kood
+
+Edasisuund kasutab kolme abifunktsiooni — `linear`, `softmax`, `rmsnorm` —
+ja ühte suurt funktsiooni `gpt()`, mis need kokku ühendab. Abifunktsioonid
+elavad failis `src/microgpt_annotated.py`, alajaotises
+`overview-pipeline-helpers`:
+
+```python
+def linear(x, w):
+    return [sum(wi * xi for wi, xi in zip(wo, x)) for wo in w]
+
+def softmax(logits):
+    max_val = max(val.data for val in logits)
+    exps = [(val - max_val).exp() for val in logits]
+    total = sum(exps)
+    return [e / total for e in exps]
+
+def rmsnorm(x):
+    ms = sum(xi * xi for xi in x) / len(x)
+    scale = (ms + 1e-5) ** -0.5
+    return [xi * scale for xi in x]
+```
+
+Treeningsamm (alajaotis `overview-training-step`) on lihtsalt: edasisuund →
+kao arvutamine tõe vastu → `loss.backward()` → **Adam**-uuendus (lineaarse
+õpisammu kahanemisega) igal parameetril — optimeerija on õppetunni
+**[05 · Treenimine ja genereerimine](/et/05-training)** teema. TypeScripti
+port failides `src/inference/{model,value,weights}.ts` teostab sama
+edasisuunatee, nii et see liivakast saab seda jooksutada otse sinu brauseris,
+päris ~89 KB treenitud kaaludel, mis on repos kaasas.
+
+## Liivakast
+
+Trüki kuni 10 tähemärki (või vali eelseadistus). Vaheta režiime: **Forward**
+näitab järgmise tähemärgi ennustatud tõenäosust; **Loss** võrdleb iga
+ennustust tegeliku järgmise tähemärgiga; **Sample** loosib viimase
+positsiooni jaotusest ühe tähemärgi ja lisab selle lõppu.
+
+> **Proovi ise.**
+>
+> 1. Trüki režiimis **Forward** `ann`. Mudel on näinud palju nimesid — kas
+>    `a` on tema esipakkumine järgmiseks täheks? Kui suure tõenäosuse annab
+>    ta `STOP`-ile?
+> 2. Nüüd trüki midagi sügavalt nimevõõrast, näiteks `xqz`. Vaata, kuidas
+>    jaotus lamenedes laiali valgub: mudel ütleb sulle numbritega „mul pole
+>    õrna aimugi".
+> 3. Lülitu päris nimega režiimi **Loss**. Leia positsioon punase ristiga,
+>    kus tõel oli siiski korralik tõenäosus — see ongi vahe „esipakkumine
+>    vale" ja „suur kadu" vahel.
+> 4. Loosi režiimis **Sample** sama eesliidesega mitu korda uuesti. Sama
+>    sisend, erinevad väljundid — see ongi jaotusest valimine, mitte
+>    maksimumi võtmine.
+
+<OverviewSandbox defaultText="anna" />

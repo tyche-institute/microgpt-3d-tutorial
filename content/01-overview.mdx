@@ -1,5 +1,13 @@
 # 01 · Overview: Data → Forward → Loss → Sample in 30 Seconds
 
+🌐 English · [Русский](/ru/01-overview) · [Eesti](/et/01-overview)
+
+By the end of this page you'll have watched a 4,000-dial machine read
+half-finished names like `ann…` and place its bets on every possible next
+letter — then learn from its mistakes, then invent names nobody has ever
+had. The entire rest of the tutorial just zooms into the boxes you meet
+here.
+
 > **Before you dive in.** This lesson leans on three ideas from
 > [00 · Foundations](/00-foundations): the model is a *function* with
 > adjustable dials (§1), characters become numbers called *tokens* (§2), and
@@ -61,5 +69,20 @@ The training step (subsection `overview-training-step`) is just: forward → com
 ## Sandbox
 
 Type up to 10 characters (or pick a preset). Switch modes: **Forward** shows the predicted probability for the next character; **Loss** compares each prediction to the true next character; **Sample** draws one character from the last-position distribution and appends it.
+
+> **Try this.**
+>
+> 1. Type `ann` in **Forward** mode. The model has seen a lot of names — is
+>    `a` its top bet for the next letter? How much probability does it give
+>    `STOP`?
+> 2. Now type something deeply un-namelike, like `xqz`. Watch the
+>    distribution flatten: the model is telling you "I have no idea", with
+>    numbers.
+> 3. Switch to **Loss** mode with a real name. Find a position with a red
+>    cross where the truth still had decent probability — that's the
+>    difference between "top guess wrong" and "high loss".
+> 4. In **Sample** mode, resample several times from the same prefix. Same
+>    input, different outputs — that's sampling from a distribution rather
+>    than picking the maximum.
 
 <OverviewSandbox defaultText="anna" />

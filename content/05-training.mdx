@@ -1,5 +1,14 @@
 # 05 · Training & Generation: The Loop That Closes microGPT
 
+🌐 English · [Русский](/ru/05-training) · [Eesti](/et/05-training)
+
+Four lessons of machinery, and not one of them explained where the 4,000
+dial settings *came from*. This lesson does: a model that starts as pure
+Gaussian noise, a shuffled list of human names, and a loop — forward, loss,
+backward, nudge — repeated a thousand times until the noise has reorganized
+itself into something that can babble `karia`, `dell`, `aanna`: names that
+don't exist, but could. This is the payoff lesson. Everything runs.
+
 > **Before you dive in.** Training is the recipe from
 > [00 · Foundations](/00-foundations) §4 made real: compute how wrong the
 > model is (the *loss*), get every dial's *gradient* via lesson 02's
@@ -87,5 +96,20 @@ A note on what this sandbox does and does **not** do. The ~89 KB of weights were
 
 - **Generate** — watch the model build a name from BOS. Drag **temperature** and the next-character probability bars reshape live (low = focused, high = random); **resample** draws a different name. It stops when it predicts the STOP sentinel. (Each step recomputes the full prefix — same logits, no incremental KV cache.)
 - **Train** — type a document and see one real **gradient + Adam update calculation**: data → forward → loss → backward → Adam. The panel shows the real mean cross-entropy and the real `m / v / m̂ / v̂ / lr_t / Δ` for one LM-head parameter, straight from the formula. The update is **shown, not saved** — change the input and it recomputes from fresh Adam buffers at step 0.
+
+> **Try this.**
+>
+> 1. In **Generate**, set temperature to the minimum and resample five
+>    times. Then push it to the maximum and resample five more. You've just
+>    swept a model from "boring but safe" to "creative but unhinged" with
+>    one slider — the same trade-off every chatbot product tunes.
+> 2. Watch the probability bars *while* dragging temperature. The ranking
+>    of the bars never changes — only the contrast. Why? (Hint: dividing
+>    by a constant can't reorder the scores.)
+> 3. In **Train**, give it `emma` and note the loss. Now give it `xqzzv`.
+>    Which document surprises the model more, and what does that say about
+>    the names it grew up on?
+> 4. Look at the real `Δ` for the LM-head parameter. It's tiny. Training is
+>    a thousand tiny nudges — not one big revelation.
 
 <TrainingSandbox defaultDoc="emma" />

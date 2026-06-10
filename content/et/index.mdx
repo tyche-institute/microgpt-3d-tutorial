@@ -1,0 +1,73 @@
+# microGPT 3D
+
+🌐 [English](/) · [Русский](/ru) · Eesti
+
+ChatGPT-l on umbes triljon parameetrit ja ta töötab andmekeskuses. Selle
+õpiku mudel on täpselt sama liiki masin — päris GPT, päris tähelepanu
+(attention), päris gradientide ja päris treenimisega — kahandatuna nii
+väikeseks, et kogu asi mahub ~150 reale tavalisele Pythonile ja jookseb
+**otse siinsamas brauseriaknas**. Piisavalt väike, et midagi ei pea vahele
+jätma, käega lehvitama ega lihtsalt uskuma jääma: iga number, mida 3D-stseenides
+näed, on päriselt välja arvutatud, ja viimase õppetunni lõpuks oled näinud
+lähtekoodi iga rida oma tööd tegemas.
+
+See on interaktiivne, brauseris jooksev 3D-õpik Andrej Karpathy ~150-realisele
+[microGPT-le](https://gist.github.com/karpathy/8627fe009c40f57531cb18360106ce95) —
+täielik ainult-dekoodriga transformer (decoder-only transformer), kirjutatud
+puhtas Pythonis, ilma ühegi teegita.
+
+<HomeHero />
+
+Need neli algkuju — TokenCubes, NodeBlocks, ConnectorArrows ja MatrixGrid —
+ongi kogu visuaalne sõnavara, mida iga õppetund räägib. Mudel on piisavalt
+väike, et joosta tervenisti sinu brauseris: TypeScripti port toob kaasa
+~89 KB treenitud kaale ja arvutab iga logiti, mida 3D-stseenides näed,
+reaalajas, ilma ühegi serverita.
+
+## Mis on sees
+
+Iga õppetund järgib sama ülesehitust: lühike teooriaosa, kommenteeritud
+Pythoni-lõik, millest jutt käib, ja interaktiivne 3D-liivakast, mida saad
+ise torkida. Liivakastid kohanduvad teemaga (soe hele / küber-tume) ning
+neid saab ajajoone liuguriga peatada ja kerida.
+
+- **[01 · Ülevaade](/et/01-overview)** — kogu tsükkel kolmekümne sekundiga:
+  tähemärgid sisse, tõenäosus iga võimaliku järgmise tähemärgi kohta välja.
+  Edasisuund, kadu ja valimine kolme režiimina, mida saad ise juhtida.
+- **[02 · Autograd](/et/02-autograd)** — Karpathy 25-realine Value-klass
+  pööratava DAG-ina. Trüki suvaline avaldis, lohista muutujaid, mängi maha
+  edasi- ja tagasisuunalised impulsid. Just nii `.backward()` töötabki.
+- **[03 · Tähelepanu](/et/03-attention)** — üks pea, üks päring: `q·kᵀ/√d` →
+  põhjuslik mask → softmax → kaalutud väärtused. Klõpsa skoorilahtril, et näha
+  selle skalaarkorrutist.
+- **[04 · Transformeri plokk](/et/04-transformer-block)** — funktsioon `gpt()`
+  ise: vektoresitus → RMSNorm → tähelepanu → jääkühendus → MLP → jääkühendus →
+  logitid. Klõpsa suvalisel moodulil, et näha selle sisendi/väljundi kujusid
+  ja täpset Pythoni-koodi.
+- **[05 · Treenimine ja genereerimine](/et/05-training)** — faili ülejäänud osa:
+  vaata, kuidas nimi sünnib tähthaaval koos elava temperatuuriliuguriga, ja
+  näe ühte päris gradiendi ja Adam-uuenduse arvutust (edasisuund → kadu →
+  tagasilevi → optimeerija).
+
+## Kuidas seda lugeda
+
+Mõistlik tee on otse läbi **01 → 05**, aga iga õppetund seisab ka omal jalal:
+
+- Käid alles gümnaasiumis või pole lineaaralgebra ja matemaatilise analüüsiga
+  kunagi kokku puutunud? Alusta lehelt **[00 · Alusmõisted](/et/00-foundations)** —
+  viis ideed, millest kõik muu on ehitatud, lihtsas keeles. Hoia
+  **[Sõnastik](/et/glossary)** kõrval vahekaardil lahti.
+- Transformerid on sulle uued? Alusta **01**-st, et näha tsüklit linnulennult,
+  ja jätka **04**-ga, kus edasisuund on otsast lõpuni kokku traageldatud.
+- Tahad tähelepanu matemaatikat? Hüppa otse **03**-le.
+- Oled imestanud, kuidas `.backward()` tegelikult töötab? **02** on lühim tee —
+  ja **05** näitab, kuidas seesama gradient käivitab päris Adam-uuenduse arvutuse.
+- Huvitab, kuidas mudel õpib ja siis uhiuusi nimesid pursata hakkab? **05**.
+
+## Pärast V1
+
+Kood, Blenderi skriptid, mis genereerisid iga `.glb`-faili, ja teostusplaanid
+elavad [repos](https://github.com/lxb12123/microgpt-3d-tutorial). README-s on
+arenduskeskkonna seadistus. Need viis õppetundi katavad kogu treenimise,
+edasisuuna ja genereerimise algoritmi; tulevased tööd (mitmekihilised
+konfiguratsioonid, treenimine otse brauseris) on kirjas spetsifikatsioonis.
