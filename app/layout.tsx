@@ -1,4 +1,5 @@
 import './globals.css';
+import Link from 'next/link';
 import { Footer, Layout, Navbar } from 'nextra-theme-docs';
 import { Head } from 'nextra/components';
 import { getPageMap } from 'nextra/page-map';
@@ -30,7 +31,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <a href="https://tyche.institute" target="_blank" rel="noreferrer">
                   Tyche Institute
                 </a>{' '}
-                — see <a href="/about">About this adaptation</a>.
+                — see <Link href="/about">About this adaptation</Link>.
               </span>
             </Footer>
           }
