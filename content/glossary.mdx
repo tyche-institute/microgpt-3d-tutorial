@@ -1,0 +1,46 @@
+# Glossary
+
+Every term the lessons use, one ruthless sentence each. Terms link back to
+the lesson that shows them in action.
+
+## The model
+
+- **Parameter / weight** — one of the model's ~4,000 adjustable dials; training is the process of setting them. *(00, 05)*
+- **Token** — a character converted to a number so the math can eat it; big models use word-chunks, microGPT uses single characters. *(01)*
+- **Tokenizer** — the lookup table that converts characters to tokens and back. *(01)*
+- **Embedding** — the list of 16 numbers (a vector) that represents one token inside the model. *(04)*
+- **Logits** — the model's 27 raw output scores, one per possible next character, before they're turned into probabilities. *(01, 04)*
+- **Softmax** — the converter from raw scores to probabilities: exponentiate everything, then divide by the total. *(00, 03, 05)*
+- **Distribution** — the full set of 27 probabilities summing to 1; the model's actual answer is always a distribution, never a single character. *(01)*
+- **Sampling** — drawing one character at random according to the distribution, rather than always taking the most likely one. *(01, 05)*
+- **Temperature** — a constant the scores are divided by before softmax; high = flatter and more random, low = sharper and more repetitive. *(05)*
+- **START / STOP sentinel** — the one special token that marks "beginning of text" on the way in and "end of text" when predicted as output. *(01)*
+
+## The architecture (lesson 03–04)
+
+- **Attention** — the step where each position scores all earlier positions for relevance (dot products), softmaxes the scores into weights, and takes a weighted average of what those positions offer. *(03)*
+- **Query / Key / Value (q, k, v)** — three vectors derived from each position: what I'm looking for (q), what I advertise (k), what I hand over if chosen (v). *(03)*
+- **Causal mask** — the rule that a position may only look at *earlier* positions, never future ones, enforced by zeroing out the forbidden scores. *(03)*
+- **Attention head** — one independent copy of the attention mechanism; microGPT runs several in parallel so they can each learn a different pattern. *(03, 04)*
+- **MLP (multi-layer perceptron)** — the "think it over" stage after attention: two matrix multiplications with a ReLU between them, applied to each position separately. *(04)*
+- **ReLU** — the simplest curve in deep learning: negative numbers become 0, positive numbers pass through unchanged. *(02, 04)*
+- **RMSNorm** — a rescaling step that keeps each vector's numbers at a healthy overall size so nothing explodes or vanishes; normalization, nothing more. *(04)*
+- **Residual connection** — adding a block's input back to its output, so each block only has to learn a *correction*, not a full transformation. *(04)*
+- **Rotary embedding (RoPE)** — the trick that tells attention *where* each token sits in the sequence, by rotating q and k by position-dependent angles. *(04)*
+- **Transformer block** — one full unit of embedding-era architecture: norm → attention → residual → norm → MLP → residual. *(04)*
+- **Decoder-only transformer** — the GPT family shape: a stack of transformer blocks with a causal mask, trained to predict the next token. *(04)*
+
+## The training loop (lesson 02 & 05)
+
+- **Forward pass** — running the function: tokens in, logits out. *(01, 04)*
+- **Loss** — one number measuring how wrong the model is; here, `-log p(truth)` averaged over positions, so confident wrong answers hurt most. *(01, 05)*
+- **Gradient** — for each parameter, the answer to "if I nudge this dial up a little, how much does the loss change, and which way?" *(00, 02)*
+- **Chain rule** — sensitivities through chained operations multiply, like gear ratios; the backbone of backpropagation. *(00, 02)*
+- **Backpropagation / `.backward()`** — computing every parameter's gradient in one backward sweep through the computation graph. *(02)*
+- **Autograd** — the bookkeeping machinery that records the computation graph during the forward pass so `.backward()` can replay it in reverse. *(02)*
+- **DAG (directed acyclic graph)** — the shape of that recorded computation: arrows flow forward, no loops; "acyclic" just means you can't walk in a circle. *(02)*
+- **Topological order** — visiting the graph's nodes so that every node comes after the nodes it depends on; the order `.backward()` walks in reverse. *(02)*
+- **Gradient descent** — the training recipe: nudge every dial a small step against its gradient, repeat thousands of times. *(00, 05)*
+- **Learning rate** — the size of that nudge; too big overshoots, too small crawls. *(05)*
+- **Adam** — a smarter version of gradient descent that adapts each dial's step size based on the history of its gradients. *(05)*
+- **Step / iteration** — one full cycle of forward pass → loss → backward pass → parameter update. *(05)*

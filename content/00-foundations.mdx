@@ -1,0 +1,115 @@
+# 00 · Foundations: The Five Ideas You Actually Need
+
+Everything in this tutorial — attention, gradients, transformers — is built
+from five ideas, and none of them is harder than what you've seen in a good
+high-school math class. This page gives you each one in plain language, with
+the exact vocabulary the later lessons use. If you already know all five,
+skip straight to [01 · Overview](/01-overview). If a later lesson ever feels
+like it switched to a foreign language, come back here.
+
+## 1. A model is just a function
+
+In school, a function is something like `f(x) = 3x + 2`: numbers in, numbers
+out. A language model is exactly that — just bigger. microGPT is a function
+that takes a few characters in and produces ~27 numbers out (one score per
+possible next character). The whole function is built from additions,
+multiplications, and a couple of curves like `exp(x)`. There is no magic
+inside, no database of memorized sentences — only arithmetic.
+
+The twist: this function has about **4,000 dials** in it, called
+**parameters** (or **weights**). Change the dials, and the same input gives
+different outputs. "Training" means turning the dials until the outputs get
+good. That's the entire game.
+
+## 2. Characters become numbers (tokens)
+
+Functions eat numbers, not letters. So the first step is a boring lookup
+table: `a → 1`, `b → 2`, … This is called **tokenization**, and each number
+is a **token**. Big models like ChatGPT use chunks of words as tokens;
+microGPT keeps it simple with one token per character. There's also one
+special token that means "START of text" on the way in and "STOP" on the way
+out.
+
+## 3. Vectors, matrices, and the dot product
+
+A **vector** is just a list of numbers, like `[2, -1, 3]`. A **matrix** is a
+table of numbers. That's it — when a lesson says "the embedding is a
+16-dimensional vector", it means "this character is represented by a list of
+16 numbers".
+
+The one operation you must know is the **dot product**: multiply two vectors
+position by position and add it all up.
+
+```
+[1, 2, 3] · [4, 0, -1]  =  1·4 + 2·0 + 3·(-1)  =  1
+```
+
+Why care? Because a dot product is a **similarity score**. If two vectors
+point the same way, the dot product is large and positive; if they're
+unrelated, it's near zero; if they're opposite, it's negative. Attention
+(lesson 03) is built almost entirely out of this one trick: "how similar is
+what I'm looking for to what each previous character offers?"
+
+**Matrix multiplication** is nothing scarier than many dot products done in a
+batch — every row of one table dotted with every column of the other.
+
+## 4. The derivative is a sensitivity dial
+
+You may know the derivative as "the slope of a curve". Here's the more useful
+reading for this tutorial: the derivative answers
+
+> *If I nudge this input up a tiny bit, how much does the output move, and in
+> which direction?*
+
+If `f(x) = x²` and `x = 3`, the derivative is 6: nudge `x` up by a hair and
+`f` rises about 6 hairs. That number is called the **gradient** when the
+function has many inputs — you get one sensitivity number per dial.
+
+Why this matters: training needs to know, for each of the 4,000 dials, *"if
+I turn this dial up, does the model's error get better or worse, and by how
+much?"* The gradient is exactly that list of answers. Then the recipe is
+almost comically simple: **nudge every dial a tiny step in the direction
+that reduces the error, and repeat thousands of times.** That's gradient
+descent — it's the "learning" in machine learning.
+
+The **chain rule** is how you get gradients through a chain of operations:
+sensitivities multiply, like gear ratios. If doubling `a` quadruples `b`, and
+doubling `b` triples `c`, then nudging `a` moves `c` by a factor of 4 × 3.
+Lesson 02 shows this literally, as pulses flowing backward through a graph —
+and once you see it, the mysterious `.backward()` call in every deep-learning
+framework stops being mysterious.
+
+## 5. Scores become probabilities (softmax)
+
+The model's raw outputs are 27 arbitrary scores called **logits** — maybe
+`[2.3, -1.1, 0.4, …]`. We want probabilities: 27 positive numbers that sum
+to 1. The converter is called **softmax**:
+
+1. Take `exp()` of every score — now everything is positive, and bigger
+   scores became *much* bigger.
+2. Divide each by the total — now they sum to 1.
+
+That's the whole function. A big score becomes a big probability, a small
+score becomes a small one, and nothing is ever exactly zero — every
+character keeps at least a sliver of a chance. When lesson 05 plays with a
+**temperature** slider, it's just dividing the scores by a constant before
+softmax: high temperature flattens the differences (more random, more
+creative), low temperature sharpens them (more confident, more repetitive).
+
+## How the lessons use these ideas
+
+| Lesson | What it's about | Which ideas it leans on |
+| ------ | --------------- | ----------------------- |
+| [01 · Overview](/01-overview) | The whole loop in 30 seconds | functions (1), tokens (2), softmax (5) |
+| [02 · Autograd](/02-autograd) | How `.backward()` computes every gradient | derivatives & chain rule (4) |
+| [03 · Attention](/03-attention) | How a character "looks at" earlier characters | dot product (3), softmax (5) |
+| [04 · Transformer Block](/04-transformer-block) | The full forward pass, wired end to end | all of them |
+| [05 · Training & Generation](/05-training) | Watching the dials actually turn | gradients (4), softmax & temperature (5) |
+
+Stuck on a word later? Check the [Glossary](/glossary) — every term the
+lessons use, one ruthless sentence each.
+
+One last encouragement: microGPT is ~150 lines of ordinary Python. Not
+150,000 — 150. By the end of lesson 05 you will have seen *every single one
+of them* do its job in 3D. There is no part of a GPT that remains a black
+box after that.
