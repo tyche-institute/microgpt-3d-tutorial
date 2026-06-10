@@ -7,4 +7,5 @@ export default {
   '04-transformer-block': '04 · Transformeri plokk',
   '05-training': '05 · Treenimine ja genereerimine',
   glossary: 'Sõnastik',
+  about: 'Sellest kohandusest',
 };

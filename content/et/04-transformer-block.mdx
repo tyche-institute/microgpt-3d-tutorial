@@ -3,35 +3,35 @@
 🌐 [English](/04-transformer-block) · [Русский](/ru/04-transformer-block) · Eesti
 
 See on õppetund, kus masin lakkab olemast skeem ja muutub konkreetseks,
-lõplikuks objektiks. Üks number läheb sisse (tokeni id), juhtub
-kolmkümmend-ja-natuke tehet — igaüks neist allpool nähtav — ja 27 numbrit
-tulevad välja. GPT-4 ja microGPT erinevad siin ainult koguses: rohkem
+lõplikuks objektiks. Üks arv läheb sisse (tokeni id), juhtub
+kolmkümmend-ja-natuke tehet — igaüks neist allpool nähtav — ja 27 arvu
+tuleb välja. GPT-4 ja microGPT erinevad siin ainult koguses: rohkem
 plokke virnas, laiemad vektorid, rohkem päid. Teekonna *kuju*, mida sa
 kohe jälgima hakkad, on täpselt seesama, mida triljonidollariline tööstus
 jooksutab miljardeid kordi sekundis.
 
 > **Enne sukeldumist.** See õppetund on konveieriliin: tokeni vektor (tema
-> *vektoresitus* ehk embedding, 16 numbrist koosnev loend —
+> *vektoresitus* ehk embedding, 16 arvust koosnev loend —
 > [00 · Alusmõisted](/et/00-foundations) §3) siseneb, läbib kindla jaamade
 > jada ja väljub *logititena* — üks toores skoor iga võimaliku järgmise
 > tähemärgi kohta (§5). Iga jaam on midagi, millega oled juba kohtunud:
 > maatrikskorrutamised (skalaarkorrutised pakikaupa), õppetunni 03
 > tähelepanuretsept, liitmised ja kaks väikest uut tükki. **RMSNorm**
-> skaleerib vektori ümber nii, et tema numbrid püsiksid tervisliku
-> üldsuurusega — normaliseerimine, ei midagi enamat. **ReLU** on süvaõppe
+> skaleerib vektori ümber nii, et tema arvud püsiksid tervislikus
+> suuruses — normaliseerimine, ei midagi enamat. **ReLU** on süvaõppe
 > lihtsaim kõver: negatiivsetest saab 0, positiivsed lähevad läbi. Ära
 > jaamade järjekorda pähe õpi; liivakast ongi kaart.
 
 ## Teooria
 
-Õppetunnid 01–03 suumisid välja (edasisuund → kadu → valim tsüklina) ja
+Õppetunnid 01–03 suumisid välja (edasisuund → kadu → valimine tsüklina) ja
 sisse (autograd, tähelepanu). See õppetund ühendab kokku keskmise tüki:
 üheainsa funktsiooni `gpt()`, mis muudab **ühe** paari `(token_id, pos_id)`
 logitite vektoriks järgmise tähemärgi üle. microGPT puhul tähendab see
 täpselt **ühte** transformeri plokki (`n_layer = 1`), `n_embd = 16`,
 `n_head = 4`, `head_dim = 4`.
 
-Andmetee, selles järjekorras, nagu viitekood seda jooksutab:
+Andmetee selles järjekorras, milles viitekood seda jooksutab:
 
 1. **Vektoresitus** — otsi `wte`-st tokeni rida ja `wpe`-st positsiooni
    rida, liida elemendihaaval → 16 elemendiga vektor `x`.
@@ -106,7 +106,7 @@ ei Xavierit, ei Kaimingit, ei mingit erilist skaleerimist. Kui
 `linear(x, w)` loeb iga kaalumaatriksit kujul `[nout][nin]`, nii et
 väljund `j` on `w[j]` ja sisendi skalaarkorrutis. Lõpuks lamendab `params`
 iga skalaari igast maatriksist üheks lamedaks loendiks — täpselt selleks,
-mida õppetunni **05 · Treenimine ja genereerimine** Adam-tsükkel läbi käib:
+mille õppetunni **05 · Treenimine ja genereerimine** Adam-tsükkel läbi käib:
 üks `m`/`v` puhver ja üks uuendus skalaari kohta, igal sammul.
 
 ## Kommenteeritud kood
@@ -171,8 +171,9 @@ möödaviigud (salvestatud kohtades ①/② ja tagasi liidetud vastavates
 **Add**-jaamades). Tähelepanujaam võtab kokku sama arvutuse, mida selgitab
 õppetund 03 — see õppetund keskendub sellele, **kus tähelepanu tervikploki
 sees asub**. See on ploki struktuuri ja täitmisjärjekorra kaart, mitte
-päris tensoriväärtuste jaamahaaval inspektor (näidatavad kujud on staatilised
-kihimõõtmed; õppetunnis 03 saad vaadata tegelikke tähelepanunumbreid).
+tööriist, mis näitaks jaama kaupa päris tensoriväärtusi (näidatavad kujud on
+staatilised kihimõõtmed; õppetunnis 03 saad vaadata tegelikke
+tähelepanuväärtusi).
 
 > **Proovi ise.**
 >
@@ -180,9 +181,9 @@ kihimõõtmed; õppetunnis 03 saad vaadata tegelikke tähelepanunumbreid).
 >    korda andmeid normaliseeritakse? Mitu korda liitub jääkühenduse kaar
 >    teele tagasi?
 > 2. Klõpsa jaamal **mlp_fc1** ja kontrolli tema kuju: 16 sisse, 64 välja.
->    Siis **mlp_fc2**: 64 sisse, 16 välja. Plokk hingab — laiene, mõtle,
->    siis suru kokku.
-> 3. Leia jaam, mille Pythoni rea suudaksid nüüd mälust ümber kirjutada.
+>    Siis **mlp_fc2**: 64 sisse, 16 välja. Plokk hingab — laieneb, mõtleb,
+>    siis surub kokku.
+> 3. Leia jaam, mille Pythoni rea suudaksid nüüd peast kirja panna.
 >    (Kandidaat: vektoresituste liitmine — see on täpselt ühe `zip`-i
 >    kaugusel õppetunni 00 vektorite liitmisest.)
 > 4. Hinda ülaltoodud parameetritabeli abil, kui suur osa kõigist ~4000

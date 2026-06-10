@@ -7,14 +7,14 @@ viiest ideest, ja ükski neist pole raskem kui see, mida oled näinud heas
 gümnaasiumi matemaatikatunnis. See leht annab sulle igaühe neist lihtsas
 keeles, koos täpselt selle sõnavaraga, mida hilisemad õppetunnid kasutavad.
 Kui tead juba kõiki viit, hüppa otse lehele [01 · Ülevaade](/et/01-overview).
-Kui mõni hilisem õppetund tundub kunagi äkki võõrkeelele üle minevat, tule
-siia tagasi.
+Kui mõni hilisem õppetund tundub äkki võõrkeelele üle minevat, tule siia
+tagasi.
 
 ## 1. Mudel on lihtsalt funktsioon
 
-Koolis on funktsioon midagi sellist nagu `f(x) = 3x + 2`: numbrid sisse,
-numbrid välja. Keelemudel on täpselt seesama — lihtsalt suurem. microGPT on
-funktsioon, mis võtab sisse mõned tähemärgid ja annab välja ~27 numbrit
+Koolis on funktsioon midagi sellist nagu `f(x) = 3x + 2`: arvud sisse,
+arvud välja. Keelemudel on täpselt seesama — lihtsalt suurem. microGPT on
+funktsioon, mis võtab sisse mõned tähemärgid ja annab välja ~27 arvu
 (üks skoor iga võimaliku järgmise tähemärgi kohta). Kogu funktsioon koosneb
 liitmistest, korrutamistest ja paarist kõverast nagu `exp(x)`. Sees pole
 mingit maagiat ega päheõpitud lausete andmebaasi — ainult aritmeetika.
@@ -24,24 +24,24 @@ nimetatakse **parameetriteks** (ehk **kaaludeks**, weights). Keera nuppe ja
 sama sisend annab teistsuguse väljundi. „Treenimine" tähendab nuppude
 keeramist seni, kuni väljundid heaks lähevad. Kogu mäng ongi selles.
 
-## 2. Tähemärkidest saavad numbrid (tokenid)
+## 2. Tähemärkidest saavad arvud (tokenid)
 
-Funktsioonid söövad numbreid, mitte tähti. Nii et esimene samm on igav
+Funktsioonid söövad arve, mitte tähti. Nii et esimene samm on igav
 otsingutabel: `a → 1`, `b → 2`, … Seda nimetatakse **tokeniseerimiseks**
-(tokenization) ja iga number on **token**. Suured mudelid nagu ChatGPT
+(tokenization) ja iga arv on **token**. Suured mudelid nagu ChatGPT
 kasutavad tokenitena sõnatükke; microGPT hoiab asja lihtsana — üks token
-tähemärgi kohta. On veel üks eriline token, mis tähendab sisendi alguses
+tähemärgi kohta. On veel üks spetsiaalne token, mis tähendab sisendi alguses
 „teksti ALGUS" ja väljundis „STOPP".
 
 ## 3. Vektorid, maatriksid ja skalaarkorrutis
 
-**Vektor** on lihtsalt numbrite loend, näiteks `[2, -1, 3]`. **Maatriks** on
-numbrite tabel. Ongi kõik — kui õppetund ütleb, et „vektoresitus (embedding)
-on 16-mõõtmeline vektor", tähendab see: „seda tähemärki esindab 16 numbrist
+**Vektor** on lihtsalt arvude loend, näiteks `[2, -1, 3]`. **Maatriks** on
+arvude tabel. Ongi kõik — kui õppetund ütleb, et „vektoresitus (embedding)
+on 16-mõõtmeline vektor", tähendab see: „seda tähemärki esindab 16 arvust
 koosnev loend".
 
 Üks tehe, mida pead kindlasti teadma, on **skalaarkorrutis** (dot product):
-korruta kaks vektorit positsioonhaaval läbi ja liida kõik kokku.
+korruta kaks vektorit positsiooni kaupa läbi ja liida kõik kokku.
 
 ```
 [1, 2, 3] · [4, 0, -1]  =  1·4 + 2·0 + 3·(-1)  =  1
@@ -68,10 +68,10 @@ kasulikum lugemisviis: tuletis vastab küsimusele
 
 Kui `f(x) = x²` ja `x = 3`, on tuletis 6: nügi `x`-i karvavõrra ülespoole ja
 `f` tõuseb umbes 6 karvavõrra. Kui funktsioonil on palju sisendeid,
-nimetatakse seda numbrit **gradiendiks** — iga nupu kohta saad ühe
-tundlikkusnumbri.
+nimetatakse seda arvu **gradiendiks** — iga nupu kohta saad ühe
+tundlikkusarvu.
 
-Miks see loeb: treenimine peab iga 4000 nupu kohta teadma: *„kui ma keeran
+Miks see loeb: treenimine peab kõigi 4000 nupu kohta ükshaaval teadma: *„kui ma keeran
 seda nuppu ülespoole, kas mudeli viga läheb paremaks või halvemaks, ja kui
 palju?"* Gradient ongi täpselt see vastuste loend. Edasine retsept on
 peaaegu naeruväärselt lihtne: **nügi iga nuppu tibatillukese sammu võrra
@@ -91,7 +91,7 @@ süvaõpperaamistiku salapärane `.backward()`-kutse salapärane olemast.
 
 Mudeli toored väljundid on 27 suvalist skoori, mida nimetatakse
 **logititeks** (logits) — näiteks `[2.3, -1.1, 0.4, …]`. Meie tahame
-tõenäosusi: 27 positiivset numbrit, mille summa on 1. Muundurit nimetatakse
+tõenäosusi: 27 positiivset arvu, mille summa on 1. Muundurit nimetatakse
 **softmax'iks**:
 
 1. Võta igast skoorist `exp()` — nüüd on kõik positiivne ja suuremad skoorid

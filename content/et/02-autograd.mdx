@@ -3,11 +3,12 @@
 🌐 [English](/02-autograd) · [Русский](/ru/02-autograd) · Eesti
 
 Igal süvaõpperaamistikul maailmas — PyTorch, JAX, TensorFlow — on südames
-üks võlusõna: `loss.backward()`. Kutsu seda, ja kuidagi saab iga miljardist
-parameetrist täpselt teada, kuidas just tema veale kaasa aitas. See õppetund
-võtab sellelt võlusõnalt saladuskatte versiooniga, mis on piisavalt väike,
-et pealt vaadata: 25 rida Pythonit ja 3D-graaf, kus näed sõna otseses mõttes
-gradiente tagurpidi voolamas, nool noole ja number numbri haaval.
+üks võlusõna: `loss.backward()`. Kutsu see välja, ja kuidagi saab igaüks
+miljardist parameetrist täpselt teada, kuidas just tema veale kaasa aitas.
+See õppetund võtab sellelt võlusõnalt saladuskatte versiooniga, mis on
+piisavalt väike, et pealt vaadata: 25 rida Pythonit ja 3D-graaf, kus näed
+sõna otseses mõttes gradiente tagurpidi voolamas, nool noole ja arv arvu
+haaval.
 
 > **Enne sukeldumist.** Kõik siinne toetub ühele ideele lehelt
 > [00 · Alusmõisted](/et/00-foundations): tuletis kui *tundlikkuse nupp*
@@ -22,7 +23,7 @@ gradiente tagurpidi voolamas, nool noole ja number numbri haaval.
 ## Teooria
 
 Närvivõrk on funktsioon, mis koosneb paljudest väikestest tehetest: liida,
-korruta, astenda eksponentsiaalselt, ReLU. Treenimiseks vajame kao gradienti
+korruta, võta eksponent, ReLU. Treenimiseks vajame kao gradienti
 iga parameetri suhtes. Trikk, mis teeb selle praktiliseks, on
 **pöördrežiimis automaatne diferentseerimine** (reverse-mode automatic
 differentiation).
@@ -33,7 +34,7 @@ Karpathy `Value`-klass teostab selle umbes 25 reaga. Iga `Value` salvestab:
 - loendi `_children` — sõlmed, millest ta ehitati,
 - lokaalse gradiendi `d(self) / d(child_i)` iga lapse kohta.
 
-Kui kutsud `loss.backward()`:
+Kui kutsud välja `loss.backward()`:
 
 1. Läbi graaf topoloogilises järjestuses (lapsed enne vanemaid).
 2. Initsialiseeri `loss.grad = 1`.
@@ -41,8 +42,8 @@ Kui kutsud `loss.backward()`:
    `v.grad` ahelreegli kaudu igale lapsele: `child.grad += local_grad_i * v.grad`.
 
 Ongi kõik. Ei mingit sümbolarvutust, ei mingit staatilist graafi — graaf
-ehitatakse lennult, samal ajal kui teed edasisuunda, ja `backward()` mängib
-selle lihtsalt tagurpidi maha.
+ehitatakse lennult, samal ajal kui edasisuund jookseb, ja `backward()`
+mängib selle lihtsalt tagurpidi maha.
 
 Allolev 3D-liivakast laseb sul trükkida avaldise, näha elavat DAG-i, mille
 `Value`-tehted ehitavad, ja seejärel mängida maha kas edasisuunalise impulsi
@@ -114,7 +115,7 @@ class Value:
 
 TypeScripti port failis `src/inference/value.ts` peegeldab seda üks-ühele —
 samad väljanimed, sama tehete semantika —, nii et ekvivalentsustestid saavad
-mõlemat poolt sisevaadelda.
+mõlemat poolt seestpoolt uurida.
 
 ## Liivakast
 
@@ -140,7 +141,7 @@ alati loetavaks.
 >    parajasti võrdub.)
 > 2. Trüki `relu(a * b)` ja lohista liugureid, kuni `a * b` läheb
 >    negatiivseks. Vaata, kuidas iga ReLU-st ülesvoolu gradient nulli
->    klõpsab — „surnud ReLU", millega kohtud uuesti õppetunnis 04, otse
+>    kargab — „surnud ReLU", millega kohtud uuesti õppetunnis 04, otse
 >    sinu silme all.
 > 3. Ehita `a * a` (sama muutuja kaks korda). Pane tähele, kuidas gradient
 >    mõlemast teest *kokku liitub* — see on tagasisuunatsükli `+=` oma tööd

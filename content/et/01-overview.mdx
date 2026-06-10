@@ -1,4 +1,4 @@
-# 01 · Ülevaade: andmed → edasisuund → kadu → valim 30 sekundiga
+# 01 · Ülevaade: andmed → edasisuund → kadu → valimine 30 sekundiga
 
 🌐 [English](/01-overview) · [Русский](/ru/01-overview) · Eesti
 
@@ -10,7 +10,7 @@ kastidesse, millega siin kohtud.
 
 > **Enne sukeldumist.** See õppetund toetub kolmele ideele lehelt
 > [00 · Alusmõisted](/et/00-foundations): mudel on *funktsioon* keeratavate
-> nuppudega (§1), tähemärkidest saavad numbrid nimega *tokenid* (§2) ja
+> nuppudega (§1), tähemärkidest saavad arvud nimega *tokenid* (§2) ja
 > *softmax* muudab toored skoorid tõenäosusteks (§5). Üks lisand: kaofunktsioon
 > kasutab `-log p` — kõik, mida pead teadma, on see, et tegu on trahviga,
 > mis on väike, kui mudel andis õigele vastusele suure tõenäosuse, ja
@@ -35,8 +35,8 @@ liivakastis ise juhtida. Iga klipp näitab sama konveierit: **sisendtähemärgid
 **Forward** — mudel loeb tähemärgid ja ennustab tõenäosuse *iga* võimaliku
 järgmise tähemärgi kohta. Parempoolsed tulbad ongi see jaotus: mõned kõige
 tõenäolisemad, pluss neutraalne tulp `other`, mis on kõigi eraldi näitamata
-tähemärkide *summaarne* tõenäosus (summa, mitte üks kandidaat). Üks eriline
-token on vahimärk (sentinel): sisendi kõige alguses tähendab see **START**,
+tähemärkide *summaarne* tõenäosus (summa, mitte üks kandidaat). Üks
+spetsiaalne token on vahimärk (sentinel): sisendi kõige alguses tähendab see **START**,
 ja kui mudel ennustab seda *järgmise* tähemärgina, tähendab see **STOP** —
 teksti lõpp. Iva: mudel väljastab jaotuse, mitte üheainsa vastuse.
 
@@ -90,11 +90,11 @@ def rmsnorm(x):
 ```
 
 Treeningsamm (alajaotis `overview-training-step`) on lihtsalt: edasisuund →
-kao arvutamine tõe vastu → `loss.backward()` → **Adam**-uuendus (lineaarse
-õpisammu kahanemisega) igal parameetril — optimeerija on õppetunni
+kao arvutamine võrdluses tõega → `loss.backward()` → **Adam**-uuendus
+(õpisammu lineaarse kahanemisega) igal parameetril — optimeerija on õppetunni
 **[05 · Treenimine ja genereerimine](/et/05-training)** teema. TypeScripti
 port failides `src/inference/{model,value,weights}.ts` teostab sama
-edasisuunatee, nii et see liivakast saab seda jooksutada otse sinu brauseris,
+edasisuuna, nii et see liivakast saab seda jooksutada otse sinu brauseris,
 päris ~89 KB treenitud kaaludel, mis on repos kaasas.
 
 ## Liivakast
@@ -110,12 +110,12 @@ positsiooni jaotusest ühe tähemärgi ja lisab selle lõppu.
 >    `a` on tema esipakkumine järgmiseks täheks? Kui suure tõenäosuse annab
 >    ta `STOP`-ile?
 > 2. Nüüd trüki midagi sügavalt nimevõõrast, näiteks `xqz`. Vaata, kuidas
->    jaotus lamenedes laiali valgub: mudel ütleb sulle numbritega „mul pole
+>    jaotus lamenedes laiali valgub: mudel ütleb sulle arvudega „mul pole
 >    õrna aimugi".
-> 3. Lülitu päris nimega režiimi **Loss**. Leia positsioon punase ristiga,
+> 3. Lülitu režiimi **Loss** ja kasuta päris nime. Leia positsioon punase ristiga,
 >    kus tõel oli siiski korralik tõenäosus — see ongi vahe „esipakkumine
 >    vale" ja „suur kadu" vahel.
-> 4. Loosi režiimis **Sample** sama eesliidesega mitu korda uuesti. Sama
+> 4. Loosi režiimis **Sample** sama algusjadaga mitu korda uuesti. Sama
 >    sisend, erinevad väljundid — see ongi jaotusest valimine, mitte
 >    maksimumi võtmine.
 

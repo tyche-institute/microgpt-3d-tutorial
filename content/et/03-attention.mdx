@@ -9,12 +9,12 @@ teadma, et tema ees oli `a`; teine `n` sõnas `ann…` peab teadma, et ta on
 *teine* `n`. Tähelepanu on mehhanism, mis laseb igal positsioonil tahapoole
 sirutuda, küsida „kes minu eelkäijatest praegu loeb?" ja tõmmata ligi just
 selle info, mida tal vaja on — kasutades ainult skalaarkorrutisi ja ühte
-softmax'i. Seesama üks idee on GPT „T-täht" ja põhjus, miks see arhitektuur
-maailma vallutas.
+softmax'i. Seesama üks idee ongi „T" GPT nimes ja põhjus, miks see
+arhitektuur maailma vallutas.
 
 > **Enne sukeldumist.** Tähelepanu on ehitatud peaaegu täielikult
 > *skalaarkorrutisest*, mida tutvustab [00 · Alusmõisted](/et/00-foundations)
-> §3 — korruta kaks numbriloendit positsioonhaaval, liida kokku ja loe
+> §3 — korruta kaks arvuloendit positsiooni kaupa, liida kokku ja loe
 > tulemust kui **sarnasuse skoori** —, pluss *softmax* (§5), mis muudab need
 > skoorid kaaludeks summaga 1. Kui õppetund ütleb, et q, k ja v on
 > „vektoresituse õpitud lineaarteisendus", tähendab see: võta tokeni vektor
@@ -53,8 +53,8 @@ on 1) ja kuidas kaalutud **väärtused** voolavad mikserisse, moodustades
 
 - **Skoorid ja softmax on eri etapid.** `attention_logits` (toores
   `q·k/√d`) ja `attention_softmax` (kaalud) püütakse päris mudelist eraldi
-  kinni — kiired näitavad kõigepealt skoore ja saavad siis uue sildi
-  kaaludena.
+  kinni — kiired näitavad kõigepealt skoore ja sildistatakse seejärel
+  ümber kaaludeks.
 - **Maskitud tulevikutokenid ei jõua kunagi softmax'i.** Skoori `q_i·k_j`
   *saab* tulevase võtme `j > i` jaoks küll arvutada (ja labor näitab maski
   seina nende positsioonide kohal puhtalt selleks, et reegel nähtav oleks),
@@ -62,7 +62,7 @@ on 1) ja kuidas kaalutud **väärtused** voolavad mikserisse, moodustades
   kunagi osaleda ja kaalud normaliseeritakse ainult üle `j ≤ i`.
 - **Q/K/V ribad on sildid, mitte suurused.** Kolm värvilist riba iga tokeni
   all lihtsalt märgivad, *milline* projektsioon on päring, võti ja väärtus —
-  nende pikkus on illustratiivne. Tegelikud numbrid elavad
+  nende pikkus on illustratiivne. Tegelikud arvud elavad
   `q·k` lahtivõtupaneelis.
 - **Väärtuskiired on kaalutud summa.** Iga nähtav väärtus voolab mikserisse
   sildiga `wⱼ·vⱼ`; mikser liidab need kokku: `output_i = Σ wⱼ·vⱼ`.
@@ -121,7 +121,7 @@ Vajuta nuppu **Play**, et vaadata faase — tokenid → Q/K/V → skoorid → ma
 softmax → kaalutud väärtuste summa → mitu pead. Lülitid näitavad/peidavad
 Q/K/V vektorid, toored skoorid, softmax-kaalud, maskitud tuleviku ja mitme
 pea ülevaate. Klõpsa nuppu **inspect q·k** (või kiire silti), et näha
-skalaarkorrutise mõõtmehaaval lahtivõttu.
+skalaarkorrutise lahtivõttu mõõtmete kaupa.
 
 Kaks värvi kannavad kahte etappi, ülevalt alla: **oranžid** kiired on
 tähelepanukaalud päringust iga nähtava võtmeni (ülemine rada) ja
@@ -140,7 +140,7 @@ on maskitud: tema kiip muutub halliks ning ta ei saa **ei** oranži serva
 >    nähtav võti — tema ise. Mis peab tema tähelepanukaal olema, juba enne
 >    vaatamist?
 > 3. Klõpsa nuppu **inspect q·k** ja leia, millised skalaarkorrutise mõõtmed
->    panustavad kõige rohkem. Sarnasuse skoor on mõõdete kaupa kokkulangevuste
+>    panustavad kõige rohkem. Sarnasuse skoor on mõõtmete kaupa kokkulangevuste
 >    summa — siin nad on, ükshaaval.
 > 4. Jälgi maski seina. Hallid tulevikutokenid ei saa üldse oranži kiirt —
 >    veendu, et kaalude summa üle nähtava mineviku on ikkagi 1.

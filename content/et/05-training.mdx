@@ -1,4 +1,4 @@
-# 05 · Treenimine ja genereerimine: tsükkel, mis microGPT kokku sulgeb
+# 05 · Treenimine ja genereerimine: tsükkel, mis sulgeb microGPT ringi
 
 🌐 [English](/05-training) · [Русский](/ru/05-training) · Eesti
 
@@ -7,11 +7,12 @@ Neli õppetundi masinavärki, ja mitte ükski neist ei selgitanud, kust need
 Gaussi mürana, segatud loend inimeste nimedest, ja tsükkel — edasisuund,
 kadu, tagasilevi, nügimine — korratuna tuhat korda, kuni müra on end ümber
 korraldanud millekski, mis suudab pursata `karia`, `dell`, `aanna`: nimesid,
-mida ei eksisteeri, aga võiks. See on tasuvuse õppetund. Kõik jookseb.
+mida ei eksisteeri, aga võiks. See on õppetund, kus kõik senine end ära
+tasub. Kõik jookseb.
 
 > **Enne sukeldumist.** Treenimine on lehe
 > [00 · Alusmõisted](/et/00-foundations) §4 retsept ellu viiduna: arvuta,
-> kui valesti mudel eksib (*kadu*), hangi iga nupu *gradient* õppetunni 02
+> kui palju mudel eksib (*kadu*), hangi iga nupu *gradient* õppetunni 02
 > tagasilevi kaudu ja nügi siis iga nuppu väikese sammu võrra allamäge —
 > tuhandeid kordi. **Adam** on sama retsept amortisaatoritega: ta silub iga
 > nupu hiljutisi gradiente, et üks mürarikas samm nuppu siia-sinna ei
@@ -38,7 +39,7 @@ BOS = len(uchars)                    # one extra sentinel id, AFTER the chars
 vocab_size = len(uchars) + 1         # chars + 1 (the BOS)
 ```
 
-`BOS` on üksainus eriline token. Iga treeningdokument mähitakse sellega
+`BOS` on üksainus spetsiaalne token. Iga treeningdokument mähitakse sellega
 **mõlemast** otsast ja iga positsiooni **siht** (target) on lihtsalt
 järgmine token:
 
@@ -81,9 +82,9 @@ for i, p in enumerate(params):
     p.grad = 0                                    # reset for the next step
 ```
 
-### Genereerimine: purska vastu
+### Genereerimine: mudel purskab vastu
 
-Pärast treenimist genereerib mudel üks tähemärk korraga, alustades BOS-ist
+Pärast treenimist genereerib mudel tähthaaval, alustades BOS-ist
 ja söötes iga ennustuse tagasi järgmise sisendina. Karpathy Pythonis kogub
 kasvav **KV-vahemälu** (`keys`, `values`) varasemat konteksti, nii et iga
 uus token teeb tööd ainult iseenda jaoks (brauseri port arvutab seda
@@ -112,14 +113,14 @@ beta2=0.99, eps=1e-8` ja `num_steps=1000` on väärtused, millega kaasapandud
 kaalud treeniti.
 
 Märkus selle kohta, mida see liivakast teeb ja mida **ei** tee. Need ~89 KB
-kaale treeniti **võrguühenduseta**, Pythoni faili poolt; brauser mudelit
-uuesti ei treeni.
+kaale treeniti **ette ära** Pythoni failiga; brauser mudelit uuesti ei
+treeni.
 
 Režiim **Train** arvutab **ühe päris gradiendi ja Adam-uuenduse** ühe
-LM-head'i parameetri jaoks (ülejäänud võrk hoitakse fikseerituna): see
+LM-headi parameetri jaoks (ülejäänud võrk hoitakse fikseerituna): see
 tokeniseerib sinu dokumendi, jooksutab kao jaoks ehtsa edasisuuna, kutsub
 `loss.backward()` läbi õppetunni 02 `Value`-mootori, et saada tõeline
-gradient, ja arvutab täpselt ülaltoodud Adami valemi. Iga number on päris —
+gradient, ja arvutab täpselt ülaltoodud Adami valemi. Iga arv on päris —
 aga **arvutatud uuendus ainult kuvatakse, seda ei salvestata laaditud
 mudelisse**, ja iga sisendimuutus alustab uuesti värskete Adami puhvritega
 sammult 0. See on uuenduse *arvutus*, mitte salvestatud treeningsamm, ja
@@ -128,7 +129,7 @@ mudel, millest režiimis Generate valimeid võtad, jääb muutmata.
 Režiim **Generate** jooksutab päris mudelit autoregressiivselt sinu valitud
 temperatuuril. Üks täitmise detail, milles täpne olla: Pythoni viitekood
 kasutab kasvavat KV-vahemälu, samas kui brauseri TypeScripti port
-**arvutab igal genereerimissammul kogu põhjusliku eesliite uuesti**.
+**arvutab igal genereerimissammul kogu põhjusliku algusjada uuesti**.
 Tulemuseks saadavad logitid kasutavad sama matemaatikat, aga
 täitmisstrateegia on erinev — brauser *ei* pea inkrementaalset KV-vahemälu.
 
@@ -138,29 +139,29 @@ täitmisstrateegia on erinev — brauser *ei* pea inkrementaalset KV-vahemälu.
   **temperature**'i ja järgmise tähemärgi tõenäosustulbad muudavad kuju
   reaalajas (madal = fokuseeritud, kõrge = juhuslik); **resample** loosib
   uue nime. Genereerimine peatub, kui mudel ennustab vahimärgi STOP. (Iga
-  samm arvutab kogu eesliite uuesti — samad logitid, ilma inkrementaalse
+  samm arvutab kogu algusjada uuesti — samad logitid, ilma inkrementaalse
   KV-vahemäluta.)
 - **Train** — trüki dokument ja vaata ühte päris **gradiendi + Adam-uuenduse
   arvutust**: andmed → edasisuund → kadu → tagasilevi → Adam. Paneel näitab
   tõelist keskmist ristentroopiat ja tõelisi `m / v / m̂ / v̂ / lr_t / Δ`
-  väärtusi ühe LM-head'i parameetri kohta, otse valemist. Uuendus on
+  väärtusi ühe LM-headi parameetri kohta, otse valemist. Uuendus on
   **näidatud, mitte salvestatud** — muuda sisendit ja kõik arvutatakse
   uuesti värskete Adami puhvritega sammult 0.
 
 > **Proovi ise.**
 >
 > 1. Sea režiimis **Generate** temperatuur miinimumi ja loosi viis korda.
->    Siis lükka see maksimumi ja loosi veel viis. Sa just pühkisid mudeli
+>    Siis lükka see maksimumi ja loosi veel viis. Sa viisid mudeli just
 >    ühe liuguriga seisundist „igav, aga kindel" seisundisse „loov, aga
->    ohjeldamatu" — täpselt sama kompromiss, mida häälestab iga
->    juturoboti toode.
+>    ohjeldamatu" — täpselt sama kompromiss, mida timmib iga
+>    juturobot.
 > 2. Jälgi tõenäosustulpasid temperatuuri lohistamise *ajal*. Tulpade
 >    järjestus ei muutu kunagi — ainult kontrast. Miks? (Vihje:
 >    konstandiga jagamine ei saa skooride järjekorda muuta.)
 > 3. Anna režiimis **Train** mudelile `emma` ja pane kadu kirja. Nüüd anna
 >    `xqzzv`. Kumb dokument üllatab mudelit rohkem, ja mida see ütleb
 >    nimede kohta, mille keskel ta üles kasvas?
-> 4. Vaata LM-head'i parameetri päris `Δ`-d. See on tibatilluke. Treenimine
+> 4. Vaata LM-headi parameetri päris `Δ`-d. See on tibatilluke. Treenimine
 >    on tuhat tibatillukest nügimist — mitte üks suur ilmutus.
 
 <TrainingSandbox defaultDoc="emma" />

@@ -7,6 +7,7 @@ export default {
   '04-transformer-block': '04 · Transformer Block',
   '05-training': '05 · Training & Generation',
   glossary: 'Glossary',
+  about: 'About This Adaptation',
   ru: '🌐 Русский',
   et: '🌐 Eesti',
 };

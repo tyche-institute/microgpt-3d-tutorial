@@ -7,4 +7,5 @@ export default {
   '04-transformer-block': '04 · Блок трансформера',
   '05-training': '05 · Обучение и генерация',
   glossary: 'Глоссарий',
+  about: 'Об этой адаптации',
 };
