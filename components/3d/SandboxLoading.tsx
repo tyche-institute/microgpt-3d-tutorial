@@ -30,7 +30,7 @@ export function SandboxLoading({ name, height }: SandboxLoadingProps) {
   const scheme = useScheme();
   const [imgOk, setImgOk] = useState(true);
   const light = scheme === 'light';
-  const src = `/microgpt-3d-tutorial/models/previews/${name}${light ? '-light' : ''}.png`;
+  const src = `/models/previews/${name}${light ? '-light' : ''}.png`;
   const bg = light ? '#f4f5f7' : '#0a0a14';
   const pillText = light ? '#0f172a' : '#dbe4f5';
   const pillBg = light ? 'rgba(255,255,255,0.82)' : 'rgba(8,10,20,0.66)';

@@ -171,7 +171,7 @@ export function OverviewSandbox({ defaultText }: OverviewSandboxProps) {
       />
       <SceneViewer
       height="560px"
-      fallbackImage="/microgpt-3d-tutorial/models/previews/overview.png"
+      fallbackImage="/models/previews/overview.png"
       hud={hud}
       bgColor={palette.bg}
       cameraPosition={[0, 0.4, 9.5]}

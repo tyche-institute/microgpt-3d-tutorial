@@ -124,7 +124,7 @@ export function TransformerBlockSandbox({ autoplay = true }: TransformerBlockSan
       />
       <SceneViewer
         height="560px"
-        fallbackImage="/microgpt-3d-tutorial/models/previews/transformer-block.png"
+        fallbackImage="/models/previews/transformer-block.png"
         hud={hud}
         bgColor={theme.bg}
         lighting={scheme === 'light' ? LIGHT_RIG : undefined}

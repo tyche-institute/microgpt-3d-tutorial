@@ -201,7 +201,7 @@ export function AttentionSandbox({ defaultText }: AttentionSandboxProps) {
       />
       <SceneViewer
       height="640px"
-      fallbackImage="/microgpt-3d-tutorial/models/previews/attention.png"
+      fallbackImage="/models/previews/attention.png"
       hud={hud}
       bgColor={theme.bg}
       lighting={scheme === 'light' ? LIGHT_RIG : undefined}

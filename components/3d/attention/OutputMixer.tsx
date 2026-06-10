@@ -7,7 +7,7 @@ import type { AttentionTheme } from './theme';
 import { cloneGlb, eachMaterial } from './glbUtil';
 import { Halo } from './Halo';
 
-const URL = '/microgpt-3d-tutorial/models/attention/mixer.glb';
+const URL = '/models/attention/mixer.glb';
 
 export interface OutputMixerProps {
   position: [number, number, number];

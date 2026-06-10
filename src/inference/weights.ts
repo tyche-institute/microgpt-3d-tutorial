@@ -2,7 +2,7 @@
  * Loads the trained microGPT weights JSON once and caches the result.
  * The path is basepath-prefixed for GitHub Pages.
  */
-const URL = '/microgpt-3d-tutorial/data/weights/microgpt-weights.json';
+const URL = '/data/weights/microgpt-weights.json';
 
 export interface Weights {
   [key: string]: unknown;

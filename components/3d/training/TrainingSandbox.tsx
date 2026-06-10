@@ -176,7 +176,7 @@ export function TrainingSandbox({ defaultDoc = 'emma' }: TrainingSandboxProps) {
       />
       <SceneViewer
         height="560px"
-        fallbackImage="/microgpt-3d-tutorial/models/previews/training.png"
+        fallbackImage="/models/previews/training.png"
         hud={hud}
         bgColor={palette.bg}
         lighting={scheme === 'light' ? LIGHT_RIG : undefined}

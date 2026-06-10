@@ -14,7 +14,7 @@ const withBundleAnalyzer = bundleAnalyzer({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
-  basePath: '/microgpt-3d-tutorial',
+  // Served at the domain root (microgpt.tyche.institute) — no basePath.
   images: { unoptimized: true },
   reactStrictMode: true,
   // Make GitHub Pages serve trailing-slash URLs consistently

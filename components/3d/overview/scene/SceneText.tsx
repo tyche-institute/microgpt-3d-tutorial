@@ -3,7 +3,7 @@
 import { Text } from '@react-three/drei';
 import type { ComponentProps } from 'react';
 
-const FONT = '/microgpt-3d-tutorial/fonts/RobotoMono-Regular.ttf';
+const FONT = '/fonts/RobotoMono-Regular.ttf';
 
 export interface SceneTextProps extends Omit<ComponentProps<typeof Text>, 'font'> {
   /** Outline color for legibility on both themes. Defaults to a dark halo. */

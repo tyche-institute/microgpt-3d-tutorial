@@ -6,7 +6,7 @@ import { useFrame } from '@react-three/fiber';
 import { Vector3, Quaternion } from 'three';
 import type { Group, Object3D } from 'three';
 
-const URL = '/microgpt-3d-tutorial/models/primitives/arrow.glb';
+const URL = '/models/primitives/arrow.glb';
 
 export interface ConnectorArrowProps {
   from: [number, number, number];

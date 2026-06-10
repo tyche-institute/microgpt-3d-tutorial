@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { chromium } from '@playwright/test';
 
 const PORT = 4192;
-const BASE = `http://127.0.0.1:${PORT}/microgpt-3d-tutorial`;
+const BASE = `http://127.0.0.1:${PORT}`;
 // ROUTES env (comma-separated route prefixes) narrows what gets re-captured,
 // e.g. ROUTES=02-autograd to refresh only that preview without churning others.
 const ALL_TARGETS = [
@@ -18,8 +18,8 @@ const TARGETS = ROUTES ? ALL_TARGETS.filter((t) => ROUTES.includes(t.route)) : A
 
 function serve() {
   return spawn('sh', ['-c',
-    `mkdir -p .pw-serve && ln -sfn "$(pwd)/out" .pw-serve/microgpt-3d-tutorial && ` +
-    `exec npx serve .pw-serve -l ${PORT} --no-clipboard --no-port-switching`],
+    `` +
+    `exec npx serve out -l ${PORT} --no-clipboard --no-port-switching`],
     { stdio: 'ignore', detached: true });
 }
 async function waitReady() {

@@ -7,7 +7,7 @@ for (const colorScheme of ['dark', 'light'] as const) {
     page.on('pageerror', (err) => errors.push(err.message));
 
     await page.emulateMedia({ colorScheme });
-    await page.goto('/microgpt-3d-tutorial/01-overview/');
+    await page.goto('/01-overview/');
 
     await expect(page.getByRole('heading', { name: /01.*overview/i })).toBeVisible();
     // Sandboxes are wrapped in <LazyMount> (Phase 3 perf fix): the three.js

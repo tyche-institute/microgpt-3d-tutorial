@@ -6,7 +6,7 @@ import { type Object3D, Quaternion, Vector3 } from 'three';
 import type { AttentionTheme } from './theme';
 import { cloneGlb, eachMaterial } from './glbUtil';
 
-const URL = '/microgpt-3d-tutorial/models/attention/mask-panel.glb';
+const URL = '/models/attention/mask-panel.glb';
 const UP = new Vector3(0, 1, 0);
 
 export interface MaskPanelProps {

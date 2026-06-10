@@ -7,7 +7,7 @@ import type { AttentionTheme } from './theme';
 import { cloneGlb, eachMaterial } from './glbUtil';
 import { Halo } from './Halo';
 
-const URL = '/microgpt-3d-tutorial/models/attention/token-chip.glb';
+const URL = '/models/attention/token-chip.glb';
 
 export interface TokenChipProps {
   position: [number, number, number];

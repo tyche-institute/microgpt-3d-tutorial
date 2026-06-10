@@ -5,7 +5,7 @@ import { useLayoutEffect, useMemo } from 'react';
 import type { Object3D } from 'three';
 import { SceneText } from '@/components/3d/overview/scene/SceneText';
 
-const URL = '/microgpt-3d-tutorial/models/primitives/token.glb';
+const URL = '/models/primitives/token.glb';
 
 export interface TokenCubeProps {
   position: [number, number, number];

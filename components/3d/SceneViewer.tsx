@@ -19,7 +19,7 @@ export interface SceneLighting {
 export interface SceneViewerProps {
   /** CSS height, e.g. "600px" or "60vh". Required so layout never collapses. */
   height: string;
-  /** Static image shown if WebGL is unavailable. Path is browser-relative including basePath (e.g. "/microgpt-3d-tutorial/models/previews/foo.png"). */
+  /** Static image shown if WebGL is unavailable. Path is browser-relative including basePath (e.g. "/models/previews/foo.png"). */
   fallbackImage: string;
   /** Children rendered inside the R3F `<Canvas>`. */
   children: ReactNode;

@@ -50,13 +50,13 @@ describe('SceneViewer · WebGL fallback', () => {
     vi.spyOn(webgl, 'isWebGLAvailable').mockReturnValue(false);
 
     render(
-      <SceneViewer height="400px" fallbackImage="/microgpt-3d-tutorial/models/previews/test.png">
+      <SceneViewer height="400px" fallbackImage="/models/previews/test.png">
         <mesh />
       </SceneViewer>
     );
 
     const img = screen.getByRole('img');
-    expect(img).toHaveAttribute('src', '/microgpt-3d-tutorial/models/previews/test.png');
+    expect(img).toHaveAttribute('src', '/models/previews/test.png');
     expect(img).toHaveAttribute('alt', expect.stringMatching(/static preview/i));
   });
 });
@@ -72,7 +72,7 @@ describe('SceneViewer · ErrorBoundary', () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     render(
-      <SceneViewer height="400px" fallbackImage="/microgpt-3d-tutorial/models/previews/test.png">
+      <SceneViewer height="400px" fallbackImage="/models/previews/test.png">
         <ThrowingChild />
       </SceneViewer>
     );

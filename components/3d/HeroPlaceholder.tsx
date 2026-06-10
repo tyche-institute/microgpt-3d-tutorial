@@ -23,7 +23,7 @@ function useScheme(): 'light' | 'dark' {
 export function HeroPlaceholder() {
   const scheme = useScheme();
   const p = scheme === 'light' ? LIGHT_PALETTE : DARK_PALETTE;
-  const preview = `/microgpt-3d-tutorial/models/previews/hero-${scheme}.png`;
+  const preview = `/models/previews/hero-${scheme}.png`;
   return (
     <div
       role="img"

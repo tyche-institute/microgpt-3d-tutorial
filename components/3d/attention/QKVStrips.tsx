@@ -6,7 +6,7 @@ import { type Object3D } from 'three';
 import type { AttentionTheme } from './theme';
 import { cloneGlb, eachMaterial } from './glbUtil';
 
-const URL = '/microgpt-3d-tutorial/models/attention/vector-strip.glb';
+const URL = '/models/attention/vector-strip.glb';
 
 function Strip({ position, color, theme, emphasis, label }: { position: [number, number, number]; color: string; theme: AttentionTheme; emphasis: number; label?: string }) {
   const gltf = useGLTF(URL);

@@ -198,7 +198,7 @@ export function AutogradSandbox({ defaultExpression, defaultVariables }: Autogra
       />
       <SceneViewer
       height="600px"
-      fallbackImage="/microgpt-3d-tutorial/models/previews/autograd.png"
+      fallbackImage="/models/previews/autograd.png"
       hud={hud}
       bgColor={theme.bg}
       lighting={scheme === 'light' ? LIGHT_RIG : undefined}

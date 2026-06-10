@@ -8,7 +8,7 @@ import {
 } from 'three';
 import { activeRimColor, type AutogradTheme, type NodeKind } from './theme';
 
-const CHIP_URL = '/microgpt-3d-tutorial/models/autograd/chip.glb';
+const CHIP_URL = '/models/autograd/chip.glb';
 
 // Per-kind base scale — output slightly bigger ("the answer"), variables
 // smallest. The chip card is wide (1.35×0.85), so these are smaller than for a

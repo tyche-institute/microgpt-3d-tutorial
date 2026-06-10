@@ -40,8 +40,8 @@ token on vahimärk (sentinel): sisendi kõige alguses tähendab see **START**,
 ja kui mudel ennustab seda *järgmise* tähemärgina, tähendab see **STOP** —
 teksti lõpp. Iva: mudel väljastab jaotuse, mitte üheainsa vastuse.
 
-<img src="/microgpt-3d-tutorial/diagrams/overview-forward-light.gif" alt="Forward: sisendtähemärgid voolavad kasti MODEL; paremal näitavad sildistatud tulbad iga järgmise tähemärgi tõenäosust, kõrgeim esile tõstetud" loading="lazy" className="dark:hidden" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
-<img src="/microgpt-3d-tutorial/diagrams/overview-forward-dark.gif" alt="Forward: sisendtähemärgid voolavad kasti MODEL; paremal näitavad sildistatud tulbad iga järgmise tähemärgi tõenäosust, kõrgeim esile tõstetud" loading="lazy" className="hidden dark:block" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
+<img src="/diagrams/overview-forward-light.gif" alt="Forward: sisendtähemärgid voolavad kasti MODEL; paremal näitavad sildistatud tulbad iga järgmise tähemärgi tõenäosust, kõrgeim esile tõstetud" loading="lazy" className="dark:hidden" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
+<img src="/diagrams/overview-forward-dark.gif" alt="Forward: sisendtähemärgid voolavad kasti MODEL; paremal näitavad sildistatud tulbad iga järgmise tähemärgi tõenäosust, kõrgeim esile tõstetud" loading="lazy" className="hidden dark:block" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
 
 **Loss** — igal positsioonil ennustab mudel järgmise tähemärgi ja me võrdleme
 seda *tegeliku* järgmise tähemärgiga. Roheline linnuke tähendab, et mudeli
@@ -50,8 +50,8 @@ on negatiivne logaritm tõenäosusest, mille mudel andis tõele,
 `-log p(true)`, keskmistatuna üle positsioonide. Niisiis sõltub kadu tõe
 tõenäosusest, mitte ainult sellest, kas esipakkumine läks täppi.
 
-<img src="/microgpt-3d-tutorial/diagrams/overview-loss-light.gif" alt="Loss: sisendtähemärgid joondatuna oma tegelike järgmiste tähemärkidega, iga veerg märgitud rohelise linnukese või punase ristiga, lõpus keskmine kadu" loading="lazy" className="dark:hidden" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
-<img src="/microgpt-3d-tutorial/diagrams/overview-loss-dark.gif" alt="Loss: sisendtähemärgid joondatuna oma tegelike järgmiste tähemärkidega, iga veerg märgitud rohelise linnukese või punase ristiga, lõpus keskmine kadu" loading="lazy" className="hidden dark:block" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
+<img src="/diagrams/overview-loss-light.gif" alt="Loss: sisendtähemärgid joondatuna oma tegelike järgmiste tähemärkidega, iga veerg märgitud rohelise linnukese või punase ristiga, lõpus keskmine kadu" loading="lazy" className="dark:hidden" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
+<img src="/diagrams/overview-loss-dark.gif" alt="Loss: sisendtähemärgid joondatuna oma tegelike järgmiste tähemärkidega, iga veerg märgitud rohelise linnukese või punase ristiga, lõpus keskmine kadu" loading="lazy" className="hidden dark:block" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
 
 **Sample** — viimasel positsioonil loosi üks tähemärk *juhuslikult vastavalt
 tõenäosustele* (mitte alati kõige tõenäolisem), lisa see sisendi lõppu ja
@@ -59,8 +59,8 @@ korda, et genereerida teksti. Kui loos langeb tulpa `other`, lisatakse
 tegelik peidetud tähemärk; kui loositakse vahimärk **STOP**, genereerimine
 lõpeb.
 
-<img src="/microgpt-3d-tutorial/diagrams/overview-sample-light.gif" alt="Sample: oranž marker loosib tõenäosustulpadest ühe tokeni; tavaline tähemärk lendab sisendrea lõppu, vahimärgi STOP loosimine aga lõpetab genereerimise" loading="lazy" className="dark:hidden" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
-<img src="/microgpt-3d-tutorial/diagrams/overview-sample-dark.gif" alt="Sample: oranž marker loosib tõenäosustulpadest ühe tokeni; tavaline tähemärk lendab sisendrea lõppu, vahimärgi STOP loosimine aga lõpetab genereerimise" loading="lazy" className="hidden dark:block" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
+<img src="/diagrams/overview-sample-light.gif" alt="Sample: oranž marker loosib tõenäosustulpadest ühe tokeni; tavaline tähemärk lendab sisendrea lõppu, vahimärgi STOP loosimine aga lõpetab genereerimise" loading="lazy" className="dark:hidden" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
+<img src="/diagrams/overview-sample-dark.gif" alt="Sample: oranž marker loosib tõenäosustulpadest ühe tokeni; tavaline tähemärk lendab sisendrea lõppu, vahimärgi STOP loosimine aga lõpetab genereerimise" loading="lazy" className="hidden dark:block" style={{ width: '100%', maxWidth: 480, borderRadius: 12, margin: '12px 0' }} />
 
 Õppetund 02 suumib sisse autogradi, mis teeb „kaost õppimise" võimalikuks.
 Õppetund 03 suumib sisse enesetähelepanu (self-attention) plokki. See

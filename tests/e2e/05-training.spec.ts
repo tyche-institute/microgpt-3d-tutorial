@@ -14,7 +14,7 @@ for (const vp of VIEWPORTS) {
 
       await page.setViewportSize({ width: vp.width, height: vp.height });
       await page.emulateMedia({ colorScheme });
-      await page.goto('/microgpt-3d-tutorial/05-training/');
+      await page.goto('/05-training/');
 
       await expect(page.getByRole('heading', { name: /05.*training/i })).toBeVisible();
 

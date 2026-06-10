@@ -4,7 +4,7 @@ import { Instances, Instance, useGLTF } from '@react-three/drei';
 import { useMemo } from 'react';
 import type { Object3D } from 'three';
 
-const URL = '/microgpt-3d-tutorial/models/primitives/cell.glb';
+const URL = '/models/primitives/cell.glb';
 
 export interface MatrixGridProps {
   rows: number;

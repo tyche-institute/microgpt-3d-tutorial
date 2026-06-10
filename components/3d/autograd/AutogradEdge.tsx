@@ -6,8 +6,8 @@ import { Color, Quaternion, Vector3, type Mesh, type Object3D } from 'three';
 import type { AutogradTheme } from './theme';
 import type { EdgeVisual } from './scheduler';
 
-const WIRE_URL = '/microgpt-3d-tutorial/models/autograd/wire.glb';
-const PULSE_URL = '/microgpt-3d-tutorial/models/autograd/pulse.glb';
+const WIRE_URL = '/models/autograd/wire.glb';
+const PULSE_URL = '/models/autograd/pulse.glb';
 
 // Pull endpoints in toward each other so the conduit + arrowhead sit between the
 // chips, not buried inside them.

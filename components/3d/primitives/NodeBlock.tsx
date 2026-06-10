@@ -5,7 +5,7 @@ import { useMemo, useRef, type CSSProperties, type ReactNode } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Color, type Group, type Object3D } from 'three';
 
-const URL = '/microgpt-3d-tutorial/models/primitives/node.glb';
+const URL = '/models/primitives/node.glb';
 
 // White text with a black halo + translucent pill reads well on either the
 // light or dark Nextra theme without per-theme detection.

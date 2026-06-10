@@ -19,7 +19,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const PORT = 4178;
-const BASE = `http://localhost:${PORT}/microgpt-3d-tutorial`;
+const BASE = `http://localhost:${PORT}`;
 // MODES/SCHEMES can be narrowed via env (e.g. MODES=loss) to re-record only the
 // clips whose visuals changed, without churning the others.
 const MODES = (process.env.MODES?.split(',') ?? ['forward', 'loss', 'sample']);
@@ -148,8 +148,8 @@ async function main() {
   await mkdir(OUT_DIR, { recursive: true });
   // detached so we can kill the whole process group (serve spawns a node child).
   const serve = spawn('sh', ['-c',
-    `mkdir -p .pw-serve && ln -sfn "$(pwd)/out" .pw-serve/microgpt-3d-tutorial && ` +
-    `exec pnpm exec serve .pw-serve -l ${PORT} --no-clipboard --no-port-switching`],
+    `` +
+    `exec pnpm exec serve out -l ${PORT} --no-clipboard --no-port-switching`],
     { stdio: 'ignore', detached: true });
   // Poll until the static server actually answers before launching the browser.
   const url = `${BASE}/01-overview/`;
