@@ -1,5 +1,15 @@
 # 02 · Autograd: How Gradients Flow Through a Tiny DAG
 
+> **Before you dive in.** Everything here rests on one idea from
+> [00 · Foundations](/00-foundations): the derivative as a *sensitivity
+> dial* (§4) — "if I nudge this input a tiny bit, how much does the output
+> move?" — and the chain rule as gear ratios: sensitivities through chained
+> operations *multiply*. Two new words to decode the title: a **DAG** is
+> just the diagram of a computation (arrows point forward, no loops), and
+> **topological order** means "visit every node after the nodes it depends
+> on" — the order you'd naturally compute things in anyway. That's all the
+> prerequisite theory; the sandbox makes the rest visible.
+
 ## Theory
 
 A neural network is a function composed of many small ops: add, multiply, exponentiate, ReLU. To train it, we need the gradient of the loss with respect to every parameter. The trick that makes this practical is **reverse-mode automatic differentiation**.

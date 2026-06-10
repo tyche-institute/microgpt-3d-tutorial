@@ -1,5 +1,15 @@
 # 05 · Training & Generation: The Loop That Closes microGPT
 
+> **Before you dive in.** Training is the recipe from
+> [00 · Foundations](/00-foundations) §4 made real: compute how wrong the
+> model is (the *loss*), get every dial's *gradient* via lesson 02's
+> backward pass, then nudge each dial a small step downhill — thousands of
+> times. **Adam** is that same recipe with shock absorbers: it smooths each
+> dial's recent gradients so one noisy step doesn't yank the dial around.
+> And **temperature** is the §5 trick: divide the scores before softmax to
+> make generation more daring or more careful. If you've read 00 and 02,
+> nothing in this lesson is new — it's where everything finally runs.
+
 ## Theory
 
 Lessons 01–04 built the forward pass. This lesson is the rest of the file: how the weights get *learned* (training) and how the trained model *babbles new names* (generation). Both are short, and both come straight from `src/microgpt_annotated.py`.

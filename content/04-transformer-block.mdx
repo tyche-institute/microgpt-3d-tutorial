@@ -1,5 +1,17 @@
 # 04 · Transformer Block: One Pass from token_id to logits
 
+> **Before you dive in.** This lesson is an assembly line: a token's vector
+> (its *embedding*, a list of 16 numbers —
+> [00 · Foundations](/00-foundations) §3) enters, passes through a fixed
+> sequence of stations, and comes out as *logits* — one raw score per
+> possible next character (§5). Every station is something you've already
+> met: matrix multiplications (batched dot products), the attention recipe
+> from lesson 03, additions, and two small new pieces. **RMSNorm** rescales
+> a vector so its numbers stay a healthy overall size — normalization,
+> nothing more. **ReLU** is the simplest curve in deep learning: negatives
+> become 0, positives pass through. Don't memorize the station order; the
+> sandbox is the map.
+
 ## Theory
 
 Lessons 01–03 zoomed out (the forward → loss → sample loop) and in (autograd, attention). This lesson wires up the piece in the middle: the single function `gpt()` that turns **one** `(token_id, pos_id)` into a vector of logits over the next character. For microGPT that's exactly **one** transformer block (`n_layer = 1`), `n_embd = 16`, `n_head = 4`, `head_dim = 4`.

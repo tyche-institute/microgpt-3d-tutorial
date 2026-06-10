@@ -1,5 +1,15 @@
 # 03 · Attention: How Tokens Talk to Each Other
 
+> **Before you dive in.** Attention is built almost entirely out of the
+> *dot product* from [00 · Foundations](/00-foundations) §3 — multiply two
+> lists of numbers position by position, add it up, and read the result as
+> a **similarity score** — plus *softmax* (§5) to turn those scores into
+> weights that sum to 1. When the lesson says q, k, and v are "a learned
+> linear map of the embedding", it means: take the token's vector and
+> multiply it by a matrix of learned dials — same operation, three
+> different dial-sets, three different purposes. The `√d` divisor is just a
+> volume knob that keeps scores in a comfortable range.
+
 ## Theory
 
 Self-attention asks, for each query token `q_i`, "how much should I listen to each prior token's value `v_j`?" The recipe:

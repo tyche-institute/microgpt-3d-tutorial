@@ -1,5 +1,14 @@
 # 01 · Overview: Data → Forward → Loss → Sample in 30 Seconds
 
+> **Before you dive in.** This lesson leans on three ideas from
+> [00 · Foundations](/00-foundations): the model is a *function* with
+> adjustable dials (§1), characters become numbers called *tokens* (§2), and
+> *softmax* turns raw scores into probabilities (§5). One extra: the loss
+> uses `-log p` — all you need to know is that it's a penalty that is small
+> when the model gave the true answer a high probability, and huge when the
+> model was confidently wrong. Stuck on a word? Open the
+> [Glossary](/glossary).
+
 ## Theory
 
 A language model is four things in a trenchcoat: a tokenizer, a forward pass, a loss, and a sampler. Everything else — attention, MLPs, rotary embeddings, mixture-of-experts — is just a fancier forward pass.
